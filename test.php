@@ -10,8 +10,8 @@
 //echo "RESTful Wiki API Testszenario<br /><br />";
 
 //
-$user_name		= "Tim.Jaap";
-$user_password	= "L1ikM3n0w";
+$user_name		= "";
+$user_password	= "";
 
 //echo "Teste Login<br />";
 //mwApi_login( $user_name, $user_password ) . "<br />";
