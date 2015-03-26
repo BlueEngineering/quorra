@@ -32,4 +32,29 @@ $mw_api_lang["de"]["logout"][4]		= "";
 
 // mw_api_getEditToken()
 $mw_api_lang["de"]["editToken"][0]	= "";
+
+// mw_api_editPage()
+$mw_api_lang["de"]["editPage"][0]	= "Die Seite wurde erfolgreich angelegt.";
+$mw_api_lang["de"]["editPage"][1]	= "Du bist nicht eingeloggt, daher kannst du keine Artikel/Seiten anlegen.";
+$mw_api_lang["de"]["editPage"][2]	= "Du hast keinen Titel für den Artikel/die Seite angegeben.";
+$mw_api_lang["de"]["editPage"][3]	= "Du hast keinen Text für den Artikel/die Seite angegeben.";
+$mw_api_lang["de"]["editPage"][4]	= "Es wurde kein Token übergeben. Bitte wende dich an die zuständigen Systembetreuer_innen.";
+$mw_api_lang["de"]["editPage"][5]	= "Der angegebene Abschnitt ist falsch. Du musst entweder einen existierenden Abschnitt auswählen oder einen neuen anlegen.";
+$mw_api_lang["de"]["editPage"][6]	= "";
+$mw_api_lang["de"]["editPage"][7]	= "";
+$mw_api_lang["de"]["editPage"][8]	= "";
+$mw_api_lang["de"]["editPage"][9]	= "";
+$mw_api_lang["de"]["editPage"][10]	= "";
+$mw_api_lang["de"]["editPage"][11]	= "";
+$mw_api_lang["de"]["editPage"][12]	= "";
+$mw_api_lang["de"]["editPage"][13]	= "";
+$mw_api_lang["de"]["editPage"][14]	= "";
+$mw_api_lang["de"]["editPage"][15]	= "";
+$mw_api_lang["de"]["editPage"][16]	= "";
+$mw_api_lang["de"]["editPage"][17]	= "";
+$mw_api_lang["de"]["editPage"][18]	= "";
+$mw_api_lang["de"]["editPage"][19]	= "";
+$mw_api_lang["de"]["editPage"][20]	= "";
+$mw_api_lang["de"]["editPage"][21]	= "";
+$mw_api_lang["de"]["editPage"][22]	= "";
 ?>

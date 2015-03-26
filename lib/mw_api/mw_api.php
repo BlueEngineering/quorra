@@ -19,6 +19,24 @@ class mw_api {
 	
 	// methods
 	/************************************************************************************
+	 * getter method to get URL attribute
+	 *
+	 * @return	String	$this->mwAPI_url
+	 ************************************************************************************/
+	public function mw_api_getUrl() {
+		return $this->mwAPI_url;
+	}
+	
+	/************************************************************************************
+	 * getter method to get cookieprefix attribute
+	 *
+	 * @return	String	$this->mwAPI_cookieprefix;
+	 ************************************************************************************/
+	public function mw_api_getCookieprefix() {
+		return $this->mwAPI_cookieprefix;
+	}
+	
+	/************************************************************************************
 	 * method to log in mediawiki system.
 	 *
 	 * @param	User	$user
@@ -26,7 +44,7 @@ class mw_api {
 	 ************************************************************************************/
 	public function mw_api_login( $username, $userpass ) {
 		// check if user is already logged
-		if( mw_api_isLogged()[0] == true ) {
+		if( $this->mw_api_isLogged()[0] == true ) {
 			return array( true, 10, $_COOKIE[ $this->mwAPI_cookieprefix . "Token" ] );
 		}
 		
@@ -37,10 +55,12 @@ class mw_api {
 		// set cURL options
 		curl_setopt( $ch, CURLOPT_POST, true );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=login&lgname=" . $username . "&lgpassword=" . $userpass . "&format=xml" );
-		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		//curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 		
 		// execute cURL process
-		$curl_token_res		= simplexml_load_string( curl_exec( $ch ) );
+		curl_exec( $ch );
+		
+		//$curl_token_res		= simplexml_load_string( curl_exec( $ch ) );
 		
 		// create cookies with 60 days lifetime
 		setcookie( $this->mwAPI_cookieprefix . "UserName", $username, time() + 3600 * 24 * 60, "/" );
@@ -154,7 +174,7 @@ class mw_api {
 	/************************************************************************************
 	 * method to get an edit token from mediawiki system
 	 *
-	 * @return	Array	( Boolean $status, Int $err_code )
+	 * @return	Array	( Boolean $status, Int $err_code, [String $token] )
 	 ************************************************************************************/
 	public function mw_api_getEditToken() {
 		// initial cURL session
@@ -162,7 +182,7 @@ class mw_api {
 		
 		// set cURL options
 		curl_setopt( $ch, CURLOPT_URL, "?action=query&meta=token" );
-		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		//curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 		
 		// start cURL process to get an edit token from mediawiki system
 		$curl_res	= simplexml_load_string( curl_exec( $ch ) );
@@ -175,22 +195,88 @@ class mw_api {
 	}
 	
 	/************************************************************************************
-	 * method to create/edit a mediawiki article.
+	 * method to create/edit a mediawiki article. http://www.mediawiki.org/wiki/API:Edit
 	 * 
 	 * @param	String	$title
-	 * @param	String	$
+	 * @param	String	$section
+	 * @param	String	$summary
+	 * @param	String	$text
+	 * @param	String	$token
+	 * @return	Array	( Boolean $status, Int $err_code )
 	 ************************************************************************************/
+	public function mw_api_editPage( $title, $section, $summary, $text, $token ) {
+		// check if user already logged on mediawiki system.
+		if( mw_api_isLogged() == false ) {
+			return array( false, 1 );
+		}
+		
+		// parse given text to mediawiki code
+		// mw_api_parseToWikiCode( $text );
+		
+		// initial a cURL session
+		$ch		= curl_init( $this->mwApi_url );
+		
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_POST, true );
+		//curl_setopt( $ch, CURLOPT_URL, $this->mwAPI_url );
+		curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=edit&title=" . $title . "&section=new&summary=" . $summary . "&text=" . $text . "&watch&token=" . $token . urlencode( "+\\" ) );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		
+		// start cURL process to create/edit a mediawiki page.
+		curl_exec( $ch );
+		
+		// close cURL session
+		curl_close( $ch );
+	}
 	
 	/************************************************************************************
-	 * 
+	 * method to delete a mediawiki article.
 	 * 
 	 ************************************************************************************/
+	public function mw_api_delPage() {
+		//
+	}
 	
 	/************************************************************************************
-	 * 
+	 * method to create a mediawiki user.
 	 * 
 	 ************************************************************************************/
+	public function mw_api_addUser() {
+		//
+	}
 	
+	/************************************************************************************
+	 * method to delete a mediawiki user.
+	 * 
+	 ************************************************************************************/
+	public function mw_api_delUser() {
+		//
+	}
+	
+	/************************************************************************************
+	 * method to lock a mediawiki user.
+	 * 
+	 ************************************************************************************/
+	public function mw_api_lockUser() {
+		//
+	}
+	 
+	/************************************************************************************
+	 * method to parse HTML code in wikimedia code 
+	 * 
+	 ************************************************************************************/
+	public function mw_api_parseToWikiCode() {
+		//
+	}
+	 
+	/************************************************************************************
+	 * method to parse wikimedia code to HTML code
+	 * 
+	 ************************************************************************************/
+	public function mw_api_parseToHTML() {
+		//
+	}
+	 
 	/************************************************************************************
 	 * 
 	 * 
