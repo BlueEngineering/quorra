@@ -33,6 +33,11 @@ $mw_api_lang["de"]["logout"][4]		= "";
 // mw_api_getEditToken()
 $mw_api_lang["de"]["editToken"][0]	= "";
 
+// mw_api_testEditToken()
+$mw_api_lang["de"]["editTokChk"][0]	= "Der Bearbeitungstoken ist gültig.";
+$mw_api_lang["de"]["editTokChk"][1]	= "Es wurde kein Bearbeitungstoken zur Prüfung übergeben. Bitte wende dich an einen der Systembetreuer_innen.";
+$mw_api_lang["de"]["editTokChk"][2]	= "Der übergebene Bearbeitungstoken ist ungültig. Bitte wende dich an einen der Systembetreuer_innen.";
+
 // mw_api_editPage()
 $mw_api_lang["de"]["editPage"][0]	= "Die Seite wurde erfolgreich angelegt.";
 $mw_api_lang["de"]["editPage"][1]	= "Du bist nicht eingeloggt, daher kannst du keine Artikel/Seiten anlegen.";

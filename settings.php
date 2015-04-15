@@ -13,7 +13,7 @@ $quorra_url					= "http://localhost/html/quorra/test.php";
 // Informationen zum mediaWiki, das über Quorra verwaltet werden soll
 //$mw_webaddress				= "192.168.10.6";
 $mw_webaddress				= "localhost";
-$mw_path					= "wiki/";
-$mw_apiUrl					= "https://" . $mw_webaddress . "/" . $mw_path . "api.php5";
+$mw_path					= "html/mediawiki/";
+$mw_apiUrl					= "http://" . $mw_webaddress . "/" . $mw_path . "api.php";
 $mw_cookieprefix			= "be-wiki";
 ?>

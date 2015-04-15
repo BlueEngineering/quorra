@@ -55,12 +55,10 @@ class mw_api {
 		// set cURL options
 		curl_setopt( $ch, CURLOPT_POST, true );
 		curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=login&lgname=" . $username . "&lgpassword=" . $userpass . "&format=xml" );
-		//curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 		
 		// execute cURL process
-		curl_exec( $ch );
-		
-		//$curl_token_res		= simplexml_load_string( curl_exec( $ch ) );
+		$curl_token_res		= simplexml_load_string( curl_exec( $ch ) );
 		
 		// create cookies with 60 days lifetime
 		setcookie( $this->mwAPI_cookieprefix . "UserName", $username, time() + 3600 * 24 * 60, "/" );
@@ -84,10 +82,10 @@ class mw_api {
 			setcookie( $this->mwAPI_cookieprefix . "LoggedOut", "", time() - 3600, "/" );
 		} else {
 			// delete created cookies UserName, _session, Token and UserID if login is failed
-			setcookies( $this->mwAPI_cookieprefix . "UserName", "", time() - 3600, "/" );
-			setcookies( $this->mwAPI_cookieprefix . "_session", "", time() - 3600, "/" );
-			setcookies( $this->mwAPI_cookieprefix . "UserID", "", time() - 3600, "/" );
-			setcookies( $this->mwAPI_cookieprefix . "Token", "", time() - 3600, "/" );
+			setcookie( $this->mwAPI_cookieprefix . "UserName", "", time() - 3600, "/" );
+			setcookie( $this->mwAPI_cookieprefix . "_session", "", time() - 3600, "/" );
+			setcookie( $this->mwAPI_cookieprefix . "UserID", "", time() - 3600, "/" );
+			setcookie( $this->mwAPI_cookieprefix . "Token", "", time() - 3600, "/" );
 		}
 		
 		// close cURL session
@@ -126,12 +124,15 @@ class mw_api {
 			// error: an plugin return wrong password
 			case "WrongPluginPass" :
 				return array( false, 6, "" ); 
+				
 			// error: can not create an user cause ip is blocked
 			case "CreateBlocked" :
 				return array( false, 7, "" );
+				
 			// error: too many failed login tries
 			case "Throttled" :
 				return array( false, 8, "" );
+				
 			// error: unknown error
 			default :
 				return array( false, 11, "" );
@@ -158,63 +159,230 @@ class mw_api {
 	 * @return	Array	( Boolean $status, Int $err_code )
 	 ************************************************************************************/
 	public function mw_api_logout() {
-		// check if user is not logged
-		if( mw_api_isLogged() == false ) {
-			return array( false, 1 );
-		}
+		// ----- mw logout procedure -----
+		// initial cURL session
+		$ch			= curl_init( $this->mwAPI_url . '?action=logout' );
 		
-		// delete cookies
-		setcookies( $this->mwAPI_cookieprefix . "UserName", "", time() - 3600, "/" );
-		setcookies( $this->mwAPI_cookieprefix . "_session", "", time() - 3600, "/" );
-		setcookies( $this->mwAPI_cookieprefix . "UserID", "", time() - 3600, "/" );
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT'] );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		//curl_setopt( $ch, CURLOPT_MUTE, true );
 		
-		return array( true, 0 );
+		// start logout process
+		curl_exec( $ch );
+		
+		// Delete cookies
+		setcookie( $this->mwAPI_cookieprefix . "UserName", "", time() - 3600, "/" );
+		setcookie( $this->mwAPI_cookieprefix . "_session", "", time() - 3600, "/" );
+		setcookie( $this->mwAPI_cookieprefix . "UserID", "", time() - 3600, "/" );
+		setcookie( $this->mwAPI_cookieprefix . "Token", "", time() - 3600, "/" );
+		
+		// close cURL session
+		curl_close( $ch );
 	}
 	
 	/************************************************************************************
 	 * method to get an edit token from mediawiki system
 	 *
-	 * @return	Array	( Boolean $status, Int $err_code, [String $token] )
+	 * @return	Array	( String $csrftoken, String $patroltoken, String $rollbacktoken, String $userrightstoken, String $watchtoken )
 	 ************************************************************************************/
 	public function mw_api_getEditToken() {
 		// initial cURL session
-		$ch			= curl_init( $this->mwAPI_url );
+		$ch			= curl_init( $this->mwAPI_url . "?action=query&meta=tokens&type=csrf|patrol|rollback|userrights|watch&rawcontinue&continue&format=json" );
 		
 		// set cURL options
-		curl_setopt( $ch, CURLOPT_URL, "?action=query&meta=token" );
-		//curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
 		
 		// start cURL process to get an edit token from mediawiki system
-		$curl_res	= simplexml_load_string( curl_exec( $ch ) );
+		//curl_exec( $ch );
+		$curl_res	= curl_exec( $ch );
+		
+		// close cURL session
+		curl_close( $ch );
+				
+		// return with json_decode() from $curl_res extrakted array with tokens
+		return json_decode( $curl_res, true )["query"]["tokens"];
+	}
+	 
+	/************************************************************************************
+	 * method to test an edit token from mediawiki system
+	 * 
+	 ************************************************************************************/
+	public function mw_api_testEditToken( $token ) {
+		// initial a cURL session
+		$ch			= curl_init( $this->mwAPI_url . "?action=checktoken&type=csrf&token=" . $token . "&format=json" );
+		
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		
+		// start cURL process
+		$curl_res	= curl_exec( $ch );
 		
 		// close cURL session
 		curl_close( $ch );
 		
-		// return result
-		return $curl_res; //->query->pages->page->attributes()->pageid;
+		// check if error returned
+		if( isset( json_decode( $curl_res, true )["error"] ) && json_decode( $curl_res, true )["error"]["code"] == "notoken" ) {
+			return array( false, 1 );
+		}
+		
+		// return values
+		switch( json_decode( $curl_res, true )["checktoken"]["result"] ) {
+			case "valid":
+				return array( true, 0 );				
+			case "invalid":
+				return array( false, 2 );	
+		}
+	}
+	
+	/************************************************************************************
+	 * method to check if page is exist
+	 *
+	 * @param	String	$title
+	 * @return	Boolean	$pageStatus
+	 ************************************************************************************/
+	public function mw_api_isPageExist( $title ) {
+		// initial a cURL session
+		$ch			= curl_init( $this->mwAPI_url . "?action=query&prop=info&indexpageids&titles=" . $title . "&rawcontinue&format=json" );
+		
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		
+		// start cURL process
+		$curl_res	= curl_exec( $ch );
+		
+		// close cURL session
+		curl_close( $ch );
+		
+		// exist page?
+		if( json_decode( $curl_res, true )["query"]["pageids"][0] > -1 ) {
+			return array( true, json_decode( $curl_res, true )["query"]["pageids"][0] );
+		}
+		
+		// otherwise case
+		return array( false, json_decode( $curl_res, true )["query"]["pageids"][0] );
+	}
+	
+	/************************************************************************************
+	 * method to get mediawiki article content.
+	 *
+	 * @param	Int		$pageid
+	 * @return	Array	( int $revid, int $parentid, String $timestamp, String $contentformat, String $contentmodel, String $* )
+	 ************************************************************************************/
+	public function mw_api_getPageContent( $pageid ) {
+		// initial a cURL session
+		$ch			= curl_init( $this->mwAPI_url . "?action=query&prop=revisions&pageids=" . $pageid ."&rvprop=ids|timestamp|content&rawcontinue&format=json" );
+		
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		
+		// start cURL process
+		$curl_res	= curl_exec( $ch );
+		
+		// error case
+		if ( isset( json_decode( $curl_res, true )["query"]["pages"][$pageid]["missing"] ) ) {
+			return array( "revid" => -1, "parentid" => -1, "timestamp" => "", "contentformat" => "", "contentmodel" => "", "*" => "" );
+		}
+		
+		// successful return
+		return json_decode( $curl_res, true )["query"]["pages"][$pageid]["revisions"][0];
+	}
+	
+	/************************************************************************************
+	 * method to get last revision id of given article.
+	 *
+	 * @param	int		$pageid
+	 * @return	array	(int $revid, int $parentid, String $timestamp )
+	 ************************************************************************************/
+	public function mw_api_getLastRevId( $pageid ) {
+		// initial a cURL session
+		$ch			= curl_init( $this->mwAPI_url . "?action=query&prop=revisions&pageids=" . $pageid ."&rvprop=ids|timestamp&rawcontinue&format=json" );
+		
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		
+		// start cURL process
+		$curl_res	= curl_exec( $ch );
+		
+		// error case
+		if ( isset( json_decode( $curl_res, true )["query"]["pages"][$pageid]["missing"] ) ) {
+			return array( "revid" => -1, "parentid" => -1, "timestamp" => "" );
+		}
+		
+		// successful case
+		return json_decode( $curl_res, true )["query"]["pages"][$pageid]["revisions"][0];
 	}
 	
 	/************************************************************************************
 	 * method to create/edit a mediawiki article. http://www.mediawiki.org/wiki/API:Edit
-	 * 
+	 *
+	 * @param	Int		$pageid
 	 * @param	String	$title
-	 * @param	String	$section
-	 * @param	String	$summary
 	 * @param	String	$text
+	 * @param	String	$summary (optional)
 	 * @param	String	$token
 	 * @return	Array	( Boolean $status, Int $err_code )
 	 ************************************************************************************/
-	public function mw_api_editPage( $title, $section, $summary, $text, $token ) {
+	public function mw_api_editPage( $pageid, $title = "", $text, $summary = "", $token, $lastRevId, $lastTimestamp ) {
 		// check if user already logged on mediawiki system.
-		if( mw_api_isLogged() == false ) {
+		if( $this->mw_api_isLogged() == false ) {
 			return array( false, 1 );
 		}
+		
+		// initial cURL session
+		$ch			= curl_init( $this->mwAPI_url );
+		
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_POST, true );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $ch, CURLOPT_HTTPHEADER, array( 'Content-type: application/x-www-form-urlencoded' ) );
+		curl_setopt( $ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT'] ); 
+		//curl_setopt( $ch, 
+		
+		// new page or edit existed page? pageid = -1 => new page case 
+		if ( $pageid == -1 ) {
+			// new page case
+			
+			// isn't set title?
+			if ( !isset( $title ) ) {
+				return array( false, 2 );
+			}
+			
+			// isn't set text?
+			if ( !isset( $text ) ) {
+				return array( false, 3 );
+			}
+			
+			// create current timestamp
+			$curTimestamp	= date( 'Y-m-d' ) . "T" . date( 'H:i:s' ) . "Z";
+			
+			// set POST data @end urlencode( "+\\" ) ? add md5&
+			curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=edit&title=" . $title . "&summary=" . $summary . "&text=" . $text . "&watchlist=preferences&contentmodel=wikitext&contentformat=text/x-wiki&format=json&basetimestamp=" . $curTimestamp . "&token=" . urlencode( $token ) );
+			
+		} else {
+			// edit page case
+		}
+		
+		// start cURL process to create/edit a page
+		$curl_res	= curl_exec( $ch );
+		
+		// close cURL session
+		curl_close( $ch );
+		
+		return json_decode( $curl_res, true );
+		
+		/*
+		mw_api_getLastRevId( $pageid )["revid"]
+		mw_api_getLastRevId( $pageid )["timestamp"]
+		*/
+		
 		
 		// parse given text to mediawiki code
 		// mw_api_parseToWikiCode( $text );
 		
 		// initial a cURL session
-		$ch		= curl_init( $this->mwApi_url );
+		/*
+		$ch		= curl_init( $this->mwAPI_url );
 		
 		// set cURL options
 		curl_setopt( $ch, CURLOPT_POST, true );
@@ -227,6 +395,27 @@ class mw_api {
 		
 		// close cURL session
 		curl_close( $ch );
+		*/
+		// Before send, check if edit revision the current revision
+		/*
+		action=edit
+		&title=$title
+		&text=$text
+		&summary=$summary
+		&basetimestamp=
+		&starttimestamp=
+		&md5=
+		&token=$_AusUserSessionEntnehmen
+		*/
+	}
+	 
+	/************************************************************************************
+	 * method to move a mediawiki article.
+	 * 
+	 ************************************************************************************/
+	public function mw_api_movePage() {
+		//
+		return;
 	}
 	
 	/************************************************************************************
@@ -235,6 +424,7 @@ class mw_api {
 	 ************************************************************************************/
 	public function mw_api_delPage() {
 		//
+		return;
 	}
 	
 	/************************************************************************************
@@ -243,6 +433,7 @@ class mw_api {
 	 ************************************************************************************/
 	public function mw_api_addUser() {
 		//
+		return;
 	}
 	
 	/************************************************************************************
@@ -251,6 +442,7 @@ class mw_api {
 	 ************************************************************************************/
 	public function mw_api_delUser() {
 		//
+		return;
 	}
 	
 	/************************************************************************************
@@ -259,6 +451,7 @@ class mw_api {
 	 ************************************************************************************/
 	public function mw_api_lockUser() {
 		//
+		return;
 	}
 	 
 	/************************************************************************************
@@ -267,6 +460,7 @@ class mw_api {
 	 ************************************************************************************/
 	public function mw_api_parseToWikiCode() {
 		//
+		return;
 	}
 	 
 	/************************************************************************************
@@ -275,6 +469,7 @@ class mw_api {
 	 ************************************************************************************/
 	public function mw_api_parseToHTML() {
 		//
+		return;
 	}
 	 
 	/************************************************************************************
