@@ -45,7 +45,7 @@ $mw_api_lang["de"]["editPage"][2]	= "Du hast keinen Titel für den Artikel/die S
 $mw_api_lang["de"]["editPage"][3]	= "Du hast keinen Text für den Artikel/die Seite angegeben.";
 $mw_api_lang["de"]["editPage"][4]	= "Es wurde kein Token übergeben. Bitte wende dich an die zuständigen Systembetreuer_innen.";
 $mw_api_lang["de"]["editPage"][5]	= "Der angegebene Abschnitt ist falsch. Du musst entweder einen existierenden Abschnitt auswählen oder einen neuen anlegen.";
-$mw_api_lang["de"]["editPage"][6]	= "";
+$mw_api_lang["de"]["editPage"][6]	= "Die Seite, welche du anlegen möchtest, existiert bereits. Bitte verwende den Bearbeitungsmodus oder wende dich an die zuständigen Systembetreuer_innen.";
 $mw_api_lang["de"]["editPage"][7]	= "";
 $mw_api_lang["de"]["editPage"][8]	= "";
 $mw_api_lang["de"]["editPage"][9]	= "";
@@ -62,4 +62,11 @@ $mw_api_lang["de"]["editPage"][19]	= "";
 $mw_api_lang["de"]["editPage"][20]	= "";
 $mw_api_lang["de"]["editPage"][21]	= "";
 $mw_api_lang["de"]["editPage"][22]	= "";
+
+// mw_api_delPage()
+$mw_api_lang["de"]["delPage"][0]	= "Die Seite wurde erfolgreich gelöscht";
+$mw_api_lang["de"]["delPage"][1]	= "Es wurde kein Seitentitel oder keine Seiten ID übergeben. Bitte wende dich an einen der Systembetreuer_innen.";
+$mw_api_lang["de"]["delPage"][2]	= "Du hast nicht die notwendigen Rechte um diese Seite zu löschen. Bitte wende dich an einen der Systembetreuer_innen.";
+$mw_api_lang["de"]["delPage"][3]	= "Die Seite konnte aus unbekannten Gründen nicht gelöscht werden. Bitte wende dich an einen der Systembetreuer_innen.";
+$mw_api_lang["de"]["delPage"][4]	= "Dein Bearbeitungsschlüssel ist nicht korrekt. Bitte wende dich an einen der Systembetreuer_innen.";
 ?>

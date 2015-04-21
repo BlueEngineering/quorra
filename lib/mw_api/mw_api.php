@@ -37,9 +37,10 @@ class mw_api {
 	}
 	
 	/************************************************************************************
-	 * method to log in mediawiki system.
+	 * method to log in mediawiki system.		!!! EDIT: SSL Support must be added - returnformat json !!!
 	 *
-	 * @param	User	$user
+	 * @param	String	$username
+	 * @param	String	$userpass
 	 * @return	Array	( Boolean $status, Int $err_code, String $token)
 	 ************************************************************************************/
 	public function mw_api_login( $username, $userpass ) {
@@ -156,7 +157,6 @@ class mw_api {
 	/************************************************************************************
 	 * method to log out on mediawiki system.
 	 *
-	 * @return	Array	( Boolean $status, Int $err_code )
 	 ************************************************************************************/
 	public function mw_api_logout() {
 		// ----- mw logout procedure -----
@@ -207,10 +207,12 @@ class mw_api {
 	/************************************************************************************
 	 * method to test an edit token from mediawiki system
 	 * 
+	 * @param	String	$token
+	 * @return	Array	( Boolean $status, Int $errcode )
 	 ************************************************************************************/
 	public function mw_api_testEditToken( $token ) {
 		// initial a cURL session
-		$ch			= curl_init( $this->mwAPI_url . "?action=checktoken&type=csrf&token=" . $token . "&format=json" );
+		$ch			= curl_init( $this->mwAPI_url . "?action=checktoken&type=csrf&token=" . urlencode( $token ) . "&format=json" );
 		
 		// set cURL options
 		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
@@ -239,11 +241,11 @@ class mw_api {
 	 * method to check if page is exist
 	 *
 	 * @param	String	$title
-	 * @return	Boolean	$pageStatus
+	 * @return	Array	(  )	! EDIT !
 	 ************************************************************************************/
 	public function mw_api_isPageExist( $title ) {
 		// initial a cURL session
-		$ch			= curl_init( $this->mwAPI_url . "?action=query&prop=info&indexpageids&titles=" . $title . "&rawcontinue&format=json" );
+		$ch			= curl_init( $this->mwAPI_url . "?action=query&prop=info&indexpageids&titles=" . urlencode( $title ) . "&rawcontinue&format=json" );
 		
 		// set cURL options
 		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
@@ -267,11 +269,11 @@ class mw_api {
 	 * method to get mediawiki article content.
 	 *
 	 * @param	Int		$pageid
-	 * @return	Array	( int $revid, int $parentid, String $timestamp, String $contentformat, String $contentmodel, String $* )
+	 * @return	Array	( int $revid, int $parentid, String $timestamp, String $contentformat, String $contentmodel, String $* )	! EDIT !
 	 ************************************************************************************/
 	public function mw_api_getPageContent( $pageid ) {
 		// initial a cURL session
-		$ch			= curl_init( $this->mwAPI_url . "?action=query&prop=revisions&pageids=" . $pageid ."&rvprop=ids|timestamp|content&rawcontinue&format=json" );
+		$ch			= curl_init( $this->mwAPI_url . "?action=query&prop=revisions&pageids=" . $pageid ."&rvprop=ids|timestamp|content&curtimestamp&rawcontinue&format=json" );
 		
 		// set cURL options
 		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
@@ -284,15 +286,15 @@ class mw_api {
 			return array( "revid" => -1, "parentid" => -1, "timestamp" => "", "contentformat" => "", "contentmodel" => "", "*" => "" );
 		}
 		
-		// successful return
-		return json_decode( $curl_res, true )["query"]["pages"][$pageid]["revisions"][0];
+		// successful return ["query"]["pages"][$pageid]["revisions"][0]
+		return json_decode( $curl_res, true );
 	}
 	
 	/************************************************************************************
 	 * method to get last revision id of given article.
 	 *
 	 * @param	int		$pageid
-	 * @return	array	(int $revid, int $parentid, String $timestamp )
+	 * @return	array	(int $revid, int $parentid, String $timestamp )	! EDIT !
 	 ************************************************************************************/
 	public function mw_api_getLastRevId( $pageid ) {
 		// initial a cURL session
@@ -317,13 +319,16 @@ class mw_api {
 	 * method to create/edit a mediawiki article. http://www.mediawiki.org/wiki/API:Edit
 	 *
 	 * @param	Int		$pageid
-	 * @param	String	$title
+	 * @param	String	$title	 (optional)
 	 * @param	String	$text
 	 * @param	String	$summary (optional)
 	 * @param	String	$token
-	 * @return	Array	( Boolean $status, Int $err_code )
+	 * @param	Int		$lastRevId
+	 * @param	String	$lastTimestamp
+	 * @param	String	$curTimestamp
+	 * @return	Array	( Boolean $status, Int $err_code )			! EDIT !
 	 ************************************************************************************/
-	public function mw_api_editPage( $pageid, $title = "", $text, $summary = "", $token, $lastRevId, $lastTimestamp ) {
+	public function mw_api_editPage( $pageid, $title = "", $text, $summary = "", $token, $lastRevId, $lastTimestamp, $curTimestamp ) {
 		// check if user already logged on mediawiki system.
 		if( $this->mw_api_isLogged() == false ) {
 			return array( false, 1 );
@@ -357,10 +362,21 @@ class mw_api {
 			$curTimestamp	= date( 'Y-m-d' ) . "T" . date( 'H:i:s' ) . "Z";
 			
 			// set POST data @end urlencode( "+\\" ) ? add md5&
-			curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=edit&title=" . $title . "&summary=" . $summary . "&text=" . $text . "&watchlist=preferences&contentmodel=wikitext&contentformat=text/x-wiki&format=json&basetimestamp=" . $curTimestamp . "&token=" . urlencode( $token ) );
+			curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=edit&title=" . urlencode( $title ) . "&summary=" . urlencode( $summary ) . "&text=" . $text . "&createonly&watchlist=preferences&contentmodel=wikitext&contentformat=text/x-wiki&format=json&basetimestamp=" . $curTimestamp . "&token=" . urlencode( $token ) );
 			
 		} else {
 			// edit page case
+			
+			// isn't set text?
+			if ( !isset( $text ) ) {
+				return array( false, 3 );
+			}
+			
+			// create current timestamp
+			$curTimestamp	= date( 'Y-m-d' ) . "T" . date( 'H:i:s' ) . "Z";
+			
+			// set POST data
+			curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=edit&pageid=" . $pageid . "&summary=" . urlencode( $summary ) . "&text=" . urlencode( $text ) . "&recreate&watchlist=preferences&contentmodel=wikitext&contentformat=text/x-wiki&format=json&basetimestamp=" . $lastTimestamp . "&token=" . urlencode( $token ) );
 		}
 		
 		// start cURL process to create/edit a page
@@ -369,62 +385,63 @@ class mw_api {
 		// close cURL session
 		curl_close( $ch );
 		
+		// return value parsing
+		
+		// return decoded answer		
 		return json_decode( $curl_res, true );
-		
-		/*
-		mw_api_getLastRevId( $pageid )["revid"]
-		mw_api_getLastRevId( $pageid )["timestamp"]
-		*/
-		
-		
-		// parse given text to mediawiki code
-		// mw_api_parseToWikiCode( $text );
-		
-		// initial a cURL session
-		/*
-		$ch		= curl_init( $this->mwAPI_url );
-		
-		// set cURL options
-		curl_setopt( $ch, CURLOPT_POST, true );
-		//curl_setopt( $ch, CURLOPT_URL, $this->mwAPI_url );
-		curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=edit&title=" . $title . "&section=new&summary=" . $summary . "&text=" . $text . "&watch&token=" . $token . urlencode( "+\\" ) );
-		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
-		
-		// start cURL process to create/edit a mediawiki page.
-		curl_exec( $ch );
-		
-		// close cURL session
-		curl_close( $ch );
-		*/
-		// Before send, check if edit revision the current revision
-		/*
-		action=edit
-		&title=$title
-		&text=$text
-		&summary=$summary
-		&basetimestamp=
-		&starttimestamp=
-		&md5=
-		&token=$_AusUserSessionEntnehmen
-		*/
 	}
 	 
 	/************************************************************************************
 	 * method to move a mediawiki article.
 	 * 
+	 * @param	Int		$pageid
+	 * @param	String	$moveTo
+	 * @param	String	$token
+	 * @return	Array	( )				!!! EDIT !!!
 	 ************************************************************************************/
-	public function mw_api_movePage() {
-		//
-		return;
+	public function mw_api_movePage( $pageid, $moveTo, $token ) {
+		// initial cURL session
+		$ch			= curl_init( $this->mwAPI_url );
+		
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_POST, true );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT'] );
+		curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=move&fromid=" . $pageid . "&to=" . urlencode( $moveTo ) . "&reason=Seite%20archivieren&movetalk=&noredirect=&watchlist=preferences&format=json&token=" . urlencode( $token ) );
+		
+		// start cURL process
+		$curl_res	= curl_exec( $ch );
+		
+		// close cURL session
+		curl_close( $ch );
+		
+		return json_decode( $curl_res, true );
 	}
 	
 	/************************************************************************************
 	 * method to delete a mediawiki article.
 	 * 
+	 * @param	Int		$pageid
+	 * @param	String	$token
+	 * @return	Array	( )			! EDIT !
 	 ************************************************************************************/
-	public function mw_api_delPage() {
-		//
-		return;
+	public function mw_api_delPage( $pageid, $token ) {
+		// initial cURL session
+		$ch			= curl_init( $this->mwAPI_url );
+		
+		// set cURL options
+		curl_setopt( $ch, CURLOPT_POST, true );
+		curl_setopt( $ch, CURLOPT_RETURNTRANSFER, true );
+		curl_setopt( $ch, CURLOPT_USERAGENT, $_SERVER['HTTP_USER_AGENT'] );
+		curl_setopt( $ch, CURLOPT_POSTFIELDS, "action=delete&pageid=" . $pageid . "&reason=Quorra%20deliting&watchlist=preferences&format=json&token=" . urlencode( $token ) );
+		
+		// start cURL process
+		$curl_res	= curl_exec( $ch );
+		
+		// close cURL session
+		curl_close( $ch );
+		
+		return json_decode( $curl_res, true );
 	}
 	
 	/************************************************************************************
