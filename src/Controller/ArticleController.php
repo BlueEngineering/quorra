@@ -11,6 +11,7 @@ namespace App\Controller;
 use	App\Controller\AppController;
 use App\Model\ArticleModel;
 use Cake\Network\Http\Client;
+use Cake\Controller\Component\CookieComponent;
 use Cake\Core\Configure;
 
 class ArticleController extends AppController {
@@ -32,11 +33,29 @@ class ArticleController extends AppController {
 		// get login token
 		$response	= $http->post( '?action=login&format=json', [ 'lgname' => $mw_user, 'lgpassword' => $mw_pass ] );
 		
+		if ( !empty( $response->cookies[$mw_conf['cookieprefix'] . '_session']['value'] ) ) {
+			// set cookie
+			setcookie( $mw_conf['cookieprefix'] . '_session', $response->cookies[$mw_conf['cookieprefix'] . '_session']['value'], time() + 3600 * 24 * 60, "/" );
+		}
+		
 		// try login
 		$response	= $http->post( '?action=login&format=json', [ 'lgname' => $mw_user, 'lgpassword' => $mw_pass, 'lgtoken' => json_decode( $response->body )->login->token ] );
+		$json		= json_decode( $response->body );
+		$cookies	= $response;
 		
+		// set cookies
+		if ( $json->login->result == 'Success' ) {
+			// set cookies
+			setcookie( $mw_conf['cookieprefix'] . "UserID", $response->cookies[$mw_conf['cookieprefix'] . 'UserID']['value'], time() + 3600 * 24 * 60, "/" );
+			setcookie( $mw_conf['cookieprefix'] . "UserName", $response->cookies[$mw_conf['cookieprefix'] . 'UserName']['value'], time() + 3600 * 24 * 60, "/" );
+			setcookie( $mw_conf['cookieprefix'] . "Token", $response->cookies[$mw_conf['cookieprefix'] . 'Token']['value'], time() + 3600 * 24 * 60, "/" );
+			setcookie( $mw_conf['cookieprefix'] . "LoggedOut", "", time() - 3600, "/" );
+		} else {
+			// delete cookie
+			setcookie( $mw_conf['cookieprefix'] . '_session', $response->cookies[$mw_conf['cookieprefix'] . '_session']['value'], time() - 3600 * 24 * 60, "/" );
+		}
 		
-		return json_decode( $response->body );
+		return $json;
 	}
 	
 	/************************************************************************************
@@ -130,7 +149,7 @@ class ArticleController extends AppController {
 	 *
 	 *
 	 ************************************************************************************/
-	protected function mw_editArticle( $id = '', $title = '', $text, $summary = '', $editToken, $lastRevId, $lastTimestamp  ) {
+	protected function mw_editArticle( $id = '', $title = '', $text, $summary = '', $editToken, $lastTimestamp  ) {
 		//
 		if ( empty( $id ) && empty( $title ) ) {
 			return false;
@@ -166,7 +185,7 @@ class ArticleController extends AppController {
 																 						]
 																]);
 		//		
-		return $response;
+		//return $response;
 		return json_decode( $response->body );
 	}
 	
@@ -177,16 +196,6 @@ class ArticleController extends AppController {
 	public function index() {
 		// initialise
 		$mw_conf	= Configure::read('mediawiki');
-		/*
-		$http		= new Client( [ 'host'		=> $mw_conf['url'] . '/' . $mw_conf['apifile'],
-									'port'		=> 80,
-									'scheme'	=> 'http',
-									'ssl_verify_peer' => false,
-									'ssl_verify_host' => true
-								] );
-		*/
-		
-		//$abc		= new ArticleModel();
 		//echo "<br /><br /><br />";
 		
 		//echo "<pre>";
@@ -200,7 +209,8 @@ class ArticleController extends AppController {
 		*/
 		/*
 		echo '<br />';
-		
+		*/
+		/*
 		print_r( $this->mw_login( $mw_conf['testuser'], $mw_conf['testpass'] ) );
 		
 		echo '<br />';
@@ -237,7 +247,7 @@ class ArticleController extends AppController {
 		/*
 		$text		= 'any text is this';
 		
-		print_r( $this->mw_editArticle( 549, '', $text, 'cakePHP quorra testing', $tmp->query->tokens->csrftoken, '', ''  ) );
+		print_r( $this->mw_editArticle( 549, '', $text, 'cakePHP quorra testing', $tmp->query->tokens->csrftoken, ''  ) );
 		*/
 		//echo "</pre>";
 		
@@ -258,6 +268,7 @@ class ArticleController extends AppController {
 		
 		$formdata['editToken']		= $this->mw_getEditToken()->query->tokens->csrftoken;
 		$formdata['curTimestamp']	= $tempArticle->curtimestamp;
+		$formdata['articleId']		= $testingPageId;
 		$formdata['articleTitle']	= $tempArticle->query->pages->$testingPageId->title;
 		$formdata['articleText']	= $tempArticle->query->pages->$testingPageId->revisions[0]->$textfield;
 		
@@ -275,8 +286,82 @@ class ArticleController extends AppController {
 	 *
 	 *
 	 ************************************************************************************/
-	public function edit( $id = null ) {
-		//		
+	public function edit() {
+		//
+		
+		/*
+		echo '<br /><br /><br /><pre>';
+		print_r( $this->request->data );
+		echo '</pre>';
+		*/
+		
+		//
+		if ( !empty( $this->request->data ) ) {
+			//
+			if ( !empty( $this->request->data['mw_articleTitle'] ) && !empty( $this->request->data['mw_articleContent'] ) ) {
+				//
+				$token		= $this->mw_getEditToken()->query->tokens->csrftoken;
+				$result		= $this->mw_editArticle( $this->request->data['mw_articleId'], $this->request->data['mw_articleTitle'], $this->request->data['mw_articleContent'], 'cakePHP quorra testing', $token, $this->request->data['mw_curTimestamp'] );
+				
+				switch( $result->error->code ) {
+					case 'notitle':
+						$this->set( 'result', 'Es wurde kein Titel für den Artikel übergeben.' );
+						break;
+					case 'notext':
+						$this->set( 'result', 'Es wurde kein Inhalt übergeben.' );
+						break;
+					case 'notoken':
+						$this->set( 'result', 'Es wurde kein Bearbeitungstoken übergeben.' );
+						break;
+					case 'invalidsection':
+						$this->set( 'result', 'Der Abschnitt wurde nicht angegeben.' );
+						break;
+					case 'protectedtitle':
+						$this->set( 'result', 'Der gewählte Titel ist geschützt und kann daher nicht verwendet werden.' );
+						break;
+					case 'cantcreate':
+						$this->set( 'result', 'Die Seite konnte wegen fehlenden Rechten nicht angelegt werden.' );
+						break;
+					case 'cantcreate-anon':
+						$this->set( 'result', 'Anonymen Benutzern ist das Anlegen neuer Artikel nicht erlaubt. Bitte logge dich ein!' );
+						break;
+					case 'articleexists':
+						$this->set( 'result', 'Der Artikel existiert bereits.' );
+						break;
+					case 'spamdetected':
+						$this->set( 'result', 'Scheinbar hast du in deinem Inhalt Spam Muster drin.' );
+						break;
+					case 'noedit':
+						$this->set( 'result', 'Du hast keine Berechtigung diese Seite zu bearbeiten. Bitte wende dich an die Systembetreuer_innen.' );
+						break;
+					case 'badtoken':
+						$this->set( 'result', 'Der übergebene Token ist ungültig. Bitte wende dich an die Systembetreuer_innen.' );
+						break;
+					/*
+					case '':
+						$this->set( 'result', '' );
+						break;
+					case '':
+						$this->set( 'result', '' );
+						break;
+					*/
+					default:
+						$this->set( 'result', 'Scheinbar alles ok?!' );
+						break;
+				}
+				
+				/*
+				echo '<br /><br /><br /><pre>';
+				print_r( $result );
+				echo '</pre>';
+				*/
+				//$this->set( 'result', 'Spannung!' );
+			}
+		} else {
+			$this->set( 'result', 'Es wurden keine Daten übergeben.' );
+		}
+		
+		//$this->set( 'data', $data );
 	}
 	
 	

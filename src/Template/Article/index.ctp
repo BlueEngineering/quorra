@@ -26,9 +26,13 @@
 			<?=
 			$this->Html->script('tinymce/tinymce.min.js', [ 'block' => 'script' ] );
 			
-			echo $this->Form->create();
+			echo $this->Form->create( null, [ 'url' => [ 'controller' => 'Article', 'action' => 'edit' ] ] );
 			
-			echo $this->Form->hidden( 'mw_edittoken', [ 'value' => $data['editToken'] ] );
+			echo $this->Form->hidden( 'mw_editToken', [ 'value' => $data['editToken'] ] );
+			
+			echo $this->Form->hidden( 'mw_curTimestamp', [ 'value' => $data['curTimestamp'] ] );
+			
+			echo $this->Form->hidden( 'mw_articleId', [ 'value' => $data['articleId'] ] );
 			
 			echo $this->Form->input( 'mw_articleTitle', [ 'label' => 'Artikelname', 'value' => $data['articleTitle'] ] );
 			
