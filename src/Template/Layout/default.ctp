@@ -62,7 +62,7 @@
 				<li class="dropdown">
 					<a class="dropdown-toggle" id="dropdownContent" data-toggle="dropdown" aria-expanded="true">Inhalte <span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownContent">
-						<li><a href="article"><b>Allgemein</b></a></li>
+						<li><a href=""><b>Allgemein</b></a></li>
 						<li><a href="">... auflisten</a></li>
 						<li><a href="">... erstellen</a></li>
 						<li class="divider"></li>

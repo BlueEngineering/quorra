@@ -170,14 +170,16 @@ class ArticleController extends AppController {
 		//
 		$response	= $http->post( '?action=edit&format=json',	[
 																 'pageid'			=> $id,
-																 'summary'			=> urlencode( $summary ),
-																 'text'				=> urlencode( $text ),
+																 //'summary'			=> urlencode( $summary ),
+																 'summary'			=> $summary,
+																 //'text'				=> urlencode( $text ),
+																 'text'				=> $text,
 																 'recreate'			=> '',
 																 'watchlist'		=> 'preferences',
 																 'contentmodel'		=> 'wikitext',
 																 'contentformat'	=> 'text/x-wiki',
 																 //'basetimestamp'	=> $lastTimestamp,
-																 'token'			=> urlencode( '+\\' ) // urlencode( $editToken )
+																 'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
 																],
 																[
 																 'headers'			=>	[
@@ -288,14 +290,6 @@ class ArticleController extends AppController {
 	 ************************************************************************************/
 	public function edit() {
 		//
-		
-		/*
-		echo '<br /><br /><br /><pre>';
-		print_r( $this->request->data );
-		echo '</pre>';
-		*/
-		
-		//
 		if ( !empty( $this->request->data ) ) {
 			//
 			if ( !empty( $this->request->data['mw_articleTitle'] ) && !empty( $this->request->data['mw_articleContent'] ) ) {
@@ -303,7 +297,17 @@ class ArticleController extends AppController {
 				$token		= $this->mw_getEditToken()->query->tokens->csrftoken;
 				$result		= $this->mw_editArticle( $this->request->data['mw_articleId'], $this->request->data['mw_articleTitle'], $this->request->data['mw_articleContent'], 'cakePHP quorra testing', $token, $this->request->data['mw_curTimestamp'] );
 				
-				switch( $result->error->code ) {
+				// error message receive?
+				if ( isset( $result->error->code ) ) {
+					$editRes	= $result->error->code;
+				}
+				
+				// no error message but a result?
+				if ( isset( $result->edit->result ) ) {
+					$editRes	= $result->edit->result;
+				}
+				
+				switch( $editRes ) {
 					case 'notitle':
 						$this->set( 'result', 'Es wurde kein Titel für den Artikel übergeben.' );
 						break;
@@ -341,21 +345,15 @@ class ArticleController extends AppController {
 					case '':
 						$this->set( 'result', '' );
 						break;
-					case '':
-						$this->set( 'result', '' );
-						break;
+					
 					*/
+					case 'Success':
+						$this->set( 'result', 'Glückwunsch! Der Artikel wurde erfolgreich bearbeitet!' );
+						break;
 					default:
 						$this->set( 'result', 'Scheinbar alles ok?!' );
 						break;
 				}
-				
-				/*
-				echo '<br /><br /><br /><pre>';
-				print_r( $result );
-				echo '</pre>';
-				*/
-				//$this->set( 'result', 'Spannung!' );
 			}
 		} else {
 			$this->set( 'result', 'Es wurden keine Daten übergeben.' );
