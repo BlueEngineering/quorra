@@ -9,7 +9,7 @@ return [
      * Development Mode:
      * true: Errors and warnings shown.
      */
-    'debug' => true,
+    'debug' => false,
 
     /**
      * Configure basic information about the application.
@@ -37,7 +37,6 @@ return [
      */
     'App' => [
         'namespace' => 'App',
-		//'namespace' => 'Quorra',
         'encoding' => 'UTF-8',
         'base' => false,
         'dir' => 'src',

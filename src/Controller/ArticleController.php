@@ -198,65 +198,6 @@ class ArticleController extends AppController {
 	public function index() {
 		// initialise
 		$mw_conf	= Configure::read('mediawiki');
-		//echo "<br /><br /><br />";
-		
-		//echo "<pre>";
-		/*
-		print_r($mw_conf);
-		
-		/*
-		echo '<br />';
-		
-		print_r($http);
-		*/
-		/*
-		echo '<br />';
-		*/
-		/*
-		print_r( $this->mw_login( $mw_conf['testuser'], $mw_conf['testpass'] ) );
-		
-		echo '<br />';
-		/*
-		print_r( $this->mw_logout() );
-		
-		echo '<br />';
-		*/
-		/*
-		$tmp	= $this->mw_getEditToken();
-		
-		print_r( $tmp );
-		
-		echo '<br />';
-		
-		
-		print_r( $this->mw_testEditToken( $tmp->query->tokens->csrftoken ) );
-		
-		echo '<br />';
-		*/
-		/*
-		print_r( $this->mw_getArticleByTitle( 'Demo:Demosite' ) );
-		
-		echo "<br />";
-		*/
-		/*
-		
-		$bla	= '*';
-		
-		print_r( $this->mw_getArticleByID( $testingPageId )->query->pages->$testingPageId->revisions[0]->$bla );
-		/*
-		echo '<br />';
-		*/
-		/*
-		$text		= 'any text is this';
-		
-		print_r( $this->mw_editArticle( 549, '', $text, 'cakePHP quorra testing', $tmp->query->tokens->csrftoken, ''  ) );
-		*/
-		//echo "</pre>";
-		
-		//$this->mw_getEditToken()->query->tokens->csrftoken
-		
-		//$this->set( 'blub', $huibu['url'] );
-		//<?= h($blub); ? >
 		
 		// workaround with [*] problem
 		$testingPageId				= 549;
@@ -274,13 +215,6 @@ class ArticleController extends AppController {
 		$formdata['articleTitle']	= $tempArticle->query->pages->$testingPageId->title;
 		$formdata['articleText']	= $tempArticle->query->pages->$testingPageId->revisions[0]->$textfield;
 		
-		//echo $formdata['articleText'];
-		/*
-		echo "<pre>";
-		print_r( $formdata );
-		echo "</pre>";
-		*/
-		//$formdata['']= $tempArticle;
 		$this->set( 'data', $formdata );
 	}
 	

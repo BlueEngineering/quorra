@@ -197,6 +197,4 @@ DispatcherFactory::add('ControllerFactory');
 /**
  * quorra configuration file
  **/
-//Configure::load('quorra', 'default');
-//Configure::load('quorra');
 Configure::load('quorra', 'default');

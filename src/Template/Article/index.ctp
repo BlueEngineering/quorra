@@ -8,7 +8,7 @@
 				plugins:    "advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking save table contextmenu directionality emoticons template paste textcolor",
 				statusbar:  false,
 				menubar:    false,
-				toolbar:    "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons"
+				toolbar:    "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons | code"
 			});
 		</script>
 		
@@ -22,6 +22,7 @@
 			Es kann vorläufig nur der Inhalt des Artikels <a href="http://blue-eng.km.tu-berlin.de/index.php/Demo:Demosite" target="_blank">Demosite</a> im Blue Engineering mediaWiki bearbeitet werden.
 			</p>
 			<h1>Eingabemaske für mediaWiki Artikel mit WYSIWYG-Editor</h1>
+			<p>
 			<!-- form starts -->
 			<?=
 			$this->Html->script('tinymce/tinymce.min.js', [ 'block' => 'script' ] );
@@ -34,7 +35,9 @@
 			
 			echo $this->Form->hidden( 'mw_articleId', [ 'value' => $data['articleId'] ] );
 			
-			echo $this->Form->input( 'mw_articleTitle', [ 'label' => 'Artikelname', 'value' => $data['articleTitle'] ] );
+			echo $this->Form->input( 'mw_articleTitle', [ 'label' => 'Artikelname', 'value' => $data['articleTitle'], 'placeholder' => 'Gebe den Titel des Artikels ein', 'class' => 'form-control' ] );
+			
+			echo '</p><p>';
 			
 			echo $this->Form->textarea( 'mw_articleContent', [ 'value' => $data['articleText'] ] );
 			
@@ -43,8 +46,8 @@
 			
 			echo $this->Form->end();
 			?>
-			
 			<!-- form ends -->
+			</p>
 			
 			<h1>Glossar</h1>
 			
