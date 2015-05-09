@@ -81,6 +81,27 @@
 				</li>
 				
 				<li class="dropdown">
+					<a class="dropdown-toggle" id="dropdownCourse" data-toggle="dropdown" aria-expanded="true"><span class="glyphicon glyphicon-grain"></span> Kurse <span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownCourse">
+						<li><?= $this->Html->link( 'Alle Kurse anzeigen', '/pages/ph_course_overview' ); ?></li>
+						<li class="divider"></li>
+						<li><?= $this->Html->link( 'Eigene Kurse', '/pages/ph_course_my_overview', [ 'class' => 'text-strong' ] ); ?></li>
+						<li><?= $this->Html->link( 'Seminar A', '/pages/ph_course_sem_a' ); ?></li>
+						<li><?= $this->Html->link( 'Seminar B', '/pages/ph_course_sem_b' ); ?></li>
+						<li><?= $this->Html->link( '...', '' ); ?></li>
+					</ul>
+				</li>
+				
+				<li class="dropdown">
+					<a class="dropdown-toggle" id="dropdownMediadatabase" data-toggle="dropdown" aria-expanded="true"><span class="glyphicon glyphicon-book"></span> Mediendatenbank <span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownCourses">
+						<li><?= $this->Html->link( 'Übersicht', '/pages/ph_mediadb_overview' ); ?></li>
+						<li><?= $this->Html->link( 'Medium hinzufügen', '/pages/ph_mediadb_add' ); ?></li>
+						<li><?= $this->Html->link( 'Suche', '/pages/ph_mediadb_search' ); ?></li>
+					</ul>
+				</li>
+				
+				<li class="dropdown">
 					<a class="dropdown-toggle" id="dropdownUsergroups" data-toggle="dropdown" aria-expanded="true"><span class="glyphicon glyphicon-user"></span> Benutzergruppen <span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownUsergroups">
 						<li><?= $this->Html->link( '... anzeigen', '/pages/ph_usergroups_overview' ); ?></li>
@@ -91,11 +112,25 @@
 				</li>
 				
 				<li class="dropdown">
-					<a class="dropdown-toggle" id="dropdownSettings" data-toggle="dropdown" aria-expanded="true"><span class="glyphicon glyphicon-list-alt"></span> Einstellungen <span class="caret"></span></a>
+					<a class="dropdown-toggle" id="dropdownSettings" data-toggle="dropdown" aria-expanded="true"><span class="glyphicon glyphicon-wrench"></span> Einstellungen <span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownSettings">
 						<li><?= $this->Html->link( '... Profil anzeigen', '/pages/ph_profile' ); ?></li>
 						<li class="divider"></li>
-						<li><?= $this->Html->link( '... mediaWiki', '/pages/ph_settings_mediawiki' ); ?></li>
+						<li><?= $this->Html->link( 'mediaWiki Vanilla', '/pages/ph_settings_mediawiki' ); ?></li>
+						<li><?= $this->Html->link( 'mediaWiki Erweiterungen verwalten', '/pages/ph_settings_extensions' ); ?></li>
+						<li class="divider"></li>
+						<li><?= $this->Html->link( 'mediaWiki Lockdown Extension', '/pages/ph_settings_mw_lockdown' ); ?></li>
+						<li><?= $this->Html->link( '...', '' ); ?></li>
+					</ul>
+				</li>
+				
+				<li class="dropdown">
+					<a href="dropdown-toggle" id="dropdownSystem" data-toggle="dropdown" aria-expaned="true"><span class="glyphicon glyphicon-modal-window"></span> Serversystem <span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownSystem">
+						<li><?= $this->Html->link( 'Status der Serverdienste', '/pages/ph_services' ); ?></li>
+						<li><?= $this->Html->link( 'Logfiles einsehen', '/pages/ph_view_logfiles' ); ?></li>
+						<li><?= $this->Html->link( '', '' ); ?></li>
+						<li><?= $this->Html->link( '', '' ); ?></li>
 					</ul>
 				</li>
 				
