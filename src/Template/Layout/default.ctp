@@ -53,6 +53,9 @@
 					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownNews">
 						<li><?= $this->Html->link( 'Übersicht anzeigen', '/pages/ph_news_overview' ); ?></li>
 						<li><?= $this->Html->link( 'Neuigkeit anlegen', '/pages/ph_news_new' ); ?></li>
+						<li class="divider"></li>
+						<li><?= $this->Html->link( 'Nachrichtenkanäle anzeigen', '' ); ?></li>
+						<li><?= $this->Html->link( 'Nachrichtenkanal anlegen', '' ); ?></li>
 					</ul>
 				</li>
 				
