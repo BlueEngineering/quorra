@@ -112,31 +112,36 @@
 				</li>
 				
 				<li class="dropdown">
-					<a class="dropdown-toggle" id="dropdownSettings" data-toggle="dropdown" aria-expanded="true"><span class="glyphicon glyphicon-wrench"></span> Einstellungen <span class="caret"></span></a>
+					<a class="dropdown-toggle" id="dropdownSettings" data-toggle="dropdown" aria-expanded="true"><span class="glyphicon glyphicon-pencil"></span> Profil <span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownSettings">
-						<li><?= $this->Html->link( '... Profil anzeigen', '/pages/ph_profile' ); ?></li>
+						<li><?= $this->Html->link( '... bearbeiten', '/pages/ph_profile' ); ?></li>
 						<li class="divider"></li>
-						<li><?= $this->Html->link( 'mediaWiki Vanilla', '/pages/ph_settings_mediawiki' ); ?></li>
-						<li><?= $this->Html->link( 'mediaWiki Erweiterungen verwalten', '/pages/ph_settings_extensions' ); ?></li>
-						<li class="divider"></li>
-						<li><?= $this->Html->link( 'mediaWiki Lockdown Extension', '/pages/ph_settings_mw_lockdown' ); ?></li>
-						<li><?= $this->Html->link( '...', '' ); ?></li>
+						<li><?= $this->Html->link( 'Logout', '' ); ?></li>
 					</ul>
 				</li>
 				
 				<li class="dropdown">
-					<a href="dropdown-toggle" id="dropdownSystem" data-toggle="dropdown" aria-expaned="true"><span class="glyphicon glyphicon-modal-window"></span> Serversystem <span class="caret"></span></a>
+					<a href="dropdown-toggle" id="dropdownSystem" data-toggle="dropdown" aria-expaned="true"><span class="glyphicon glyphicon-wrench"></span> System <span class="caret"></span></a>
 					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownSystem">
+						<li><?= $this->Html->link( 'mediaWiki Vanilla', '/pages/ph_settings_mediawiki' ); ?></li>
+						<li><?= $this->Html->link( 'mediaWiki Erweiterungen verwalten', '/pages/ph_settings_extensions' ); ?></li>
+						<li class="divider"></li>
 						<li><?= $this->Html->link( 'Status der Serverdienste', '/pages/ph_services' ); ?></li>
 						<li><?= $this->Html->link( 'Logfiles einsehen', '/pages/ph_view_logfiles' ); ?></li>
-						<li><?= $this->Html->link( '', '' ); ?></li>
-						<li><?= $this->Html->link( '', '' ); ?></li>
 					</ul>
 				</li>
 				
-				<li><!--span class="glyphicon glyphicon-off"></span--> <?= $this->Html->link( 'Logout', '/pages/ph_logout' ); ?></li>
-				
-				<li><!--span class="glyphicon glyphicon-question-sign"></span--> <?= $this->Html->link( 'Hilfe', '/pages/ph_help' ); ?></li>
+				<li class="dropdown">
+					<a href="dropdown-toggle" id="dropdownHelp" data-toggle="dropdown" aria-expaned="true"><span class="glyphicon glyphicon-question-sign"></span> Hilfe <span class="caret"></span></a>
+					<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownHelp">
+						<li><?= $this->Html->link( 'Helpcenter', '/pages/ph_help_helpcenter' ); ?></li>
+						<li><?= $this->Html->link( 'Probleme melden', '/pages/ph_help_problem' ); ?></li>
+						<li class="divider"></li>
+						<li><?= $this->Html->link( 'Feedback', '/pages/ph_help_feedback' ); ?></li>
+						<li class="divider"></li>
+						<li><?= $this->Html->link( 'Über Quorra', '/pages/ph_help_quorra_info' ); ?></li>
+					</ul>
+				</li>
 			</ul>
 		</div>
 	</nav>
@@ -150,15 +155,13 @@
 			<div class="col-md1"></div>
 		</div>
 		<div class="row">
-			<div class="col-md1">&nbsp;</div>
-			<div class="col-md10">
+			<div class="col-md12">
 				<div id="contentContainer">
 					<div class="row">
 						<?= $this->fetch('content') ?>
 					</div>
 				</div>
 			</div>
-			<div class="col-md1">&nbsp;</div>
 		</div>
     </div>
 </body>

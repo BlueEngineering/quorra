@@ -39,10 +39,10 @@
 			
 			echo '</p><p>';
 			
-			echo $this->Form->textarea( 'mw_articleContent', [ 'value' => $data['articleText'] ] );
+			echo $this->Form->textarea( 'mw_articleContent', [ 'value' => $data['articleText'], 'class' => 'form-control' ] );
 			
 			//echo $this->Form->reset( 'Zurücksetzen', [ 'type' => 'reset' ] );
-			echo $this->Form->submit( 'Speichern', [ 'type' => 'submit' ] );
+			echo $this->Form->submit( 'Speichern', [ 'type' => 'submit', 'class' => 'btn btn-primary' ] );
 			
 			echo $this->Form->end();
 			?>
