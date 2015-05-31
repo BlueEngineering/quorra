@@ -5,11 +5,11 @@
 Quorra is a managementsystem to administrate a mediawiki installation. It's based on CakePHP Version 3.0 and works with mediawiki API.
 
 Currently Quorra supports mediawiki Version 1.25 only. The support for older versions comes later.
-
-
 ----------------------------------------------------------
+
+
 # Required mediaWiki Extensions
-----------------------------------------------------------
+
 Quorra need some mediaWiki extensions to work:
 + Lockdown (http://www.mediawiki.org/wiki/Extension:Lockdown)
 ----------------------------------------------------------
@@ -19,19 +19,17 @@ Quorra need some mediaWiki extensions to work:
 1. run git pull in your download directory
 2. edit configuration file in config/quorra.php
 
-----------------------------------------------------------
+
 # Changelogs
-----------------------------------------------------------
 
 ## Version 1.0 Build 3
-----------------------------------------------------------
-*new features:*
+**new features:**
 * Parser between wikisyntax and HTML supports now:
   * bold text
   * italic text
   * headings
   * weblinks
-* Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account ( controller: src/Controller/DemositeController.php, views: src/Template/Demosite/* )
+* Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account<br />( controller: src/Controller/DemositeController.php, views: src/Template/Demosite/* )
 
 *changes:*
 * mediawiki api controller moves into MediawikiAPIComponent (src/Controller/Component/MediawikiAPIComponent.php)
