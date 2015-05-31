@@ -7,52 +7,44 @@ Quorra is a managementsystem to administrate a mediawiki installation. It's base
 Currently Quorra supports mediawiki Version 1.25 only. The support for older versions comes later.
 
 
-##########################################################
-## Required mediaWiki Extensions
-##########################################################
+----------------------------------------------------------
+# Required mediaWiki Extensions
+----------------------------------------------------------
 Quorra need some mediaWiki extensions to work:
 + Lockdown (http://www.mediawiki.org/wiki/Extension:Lockdown)
-##########################################################
+----------------------------------------------------------
 
-
-##########################################################
-## Installation
-##########################################################
+# Installation
 
 1. run git pull in your download directory
 2. edit configuration file in config/quorra.php
 
-##########################################################
-
-
-##########################################################
-## Changelog Version 1.0 Build 3
-##########################################################
-<strong>new features:</strong>
-+ Parser between wikisyntax and HTML supports now:
-+ + bold text
-+ + italic text
-+ + headings
-+ + weblinks
-+ Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account (controller: src/Controller/DemositeController.php, views: src/Template/Demosite/*)
+----------------------------------------------------------
+# Changelogs
 ----------------------------------------------------------
 
-changes:
+## Version 1.0 Build 3
 ----------------------------------------------------------
-+ mediawiki api controller moves into MediawikiAPIComponent (src/Controller/Component/MediawikiAPIComponent.php)
-+ MediawikiAPIComponent:
-++ Fixing mw_createArticle()
-+ edit quorra config
-++ add 'version' variable
-++ add 'srclink' variable where linked projectsite
-++ renamed 'testuser' to 'demouser' and 'testpass' to 'demopass'
-----------------------------------------------------------
+*new features:*
+* Parser between wikisyntax and HTML supports now:
+  * bold text
+  * italic text
+  * headings
+  * weblinks
+* Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account ( controller: src/Controller/DemositeController.php, views: src/Template/Demosite/* )
 
-removes:
-----------------------------------------------------------
-~~remove model file src/Model/ArticleModel.php~~
+*changes:*
+* mediawiki api controller moves into MediawikiAPIComponent (src/Controller/Component/MediawikiAPIComponent.php)
+* MediawikiAPIComponent:
+  * Fixing mw_createArticle()
+* edit quorra config
+  * add 'version' variable
+  * add 'srclink' variable where linked projectsite
+  * renamed 'testuser' to 'demouser' and 'testpass' to 'demopass'
 
-##########################################################
+*removes:*
+* remove model file src/Model/ArticleModel.php
+----------------------------------------------------------
 
 
 ##########################################################
