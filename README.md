@@ -6,7 +6,6 @@ Quorra is a managementsystem to administrate a mediawiki installation. It's base
 
 Currently Quorra supports mediawiki Version 1.25 only. The support for older versions comes later.
 
-----------------------------------------------------------
 
 
 # Required mediaWiki Extensions
@@ -14,14 +13,14 @@ Currently Quorra supports mediawiki Version 1.25 only. The support for older ver
 Quorra need some mediaWiki extensions to work:
 + Lockdown (http://www.mediawiki.org/wiki/Extension:Lockdown)
 
-----------------------------------------------------------
+
 
 # Installation
 
 1. run git pull in your download directory
 2. edit configuration file in config/quorra.php
 
-----------------------------------------------------------
+
 
 # Changelogs
 
@@ -32,10 +31,13 @@ Quorra need some mediaWiki extensions to work:
   * italic text
   * headings
   * weblinks
-* Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account<br />( controller: src/Controller/DemositeController.php, views: src/Template/Demosite/* )
+* Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account
+  * controller: src/Controller/DemositeController.php
+  * views: src/Template/Demosite/*
 
 **changes:**
-* mediawiki api controller moves into MediawikiAPIComponent (src/Controller/Component/MediawikiAPIComponent.php)
+* mediawiki api controller moves into MediawikiAPIComponent
+  * src/Controller/Component/MediawikiAPIComponent.php
 * MediawikiAPIComponent:
   * Fixing mw_createArticle()
 * edit quorra config
@@ -46,7 +48,6 @@ Quorra need some mediaWiki extensions to work:
 **removes:**
 * remove model file src/Model/ArticleModel.php
 
-----------------------------------------------------------
 
 
 ## Changelog Version 1.0 Build 2
@@ -54,7 +55,6 @@ Quorra need some mediaWiki extensions to work:
 * create some frontend masks
 * create few placeholder
 
-----------------------------------------------------------
 
 
 ## Changelog Version 1.0 Build 1
