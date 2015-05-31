@@ -9,186 +9,18 @@
 namespace App\Controller;
 
 use	App\Controller\AppController;
-use App\Model\ArticleModel;
-use Cake\Network\Http\Client;
-use Cake\Controller\Component\CookieComponent;
 use Cake\Core\Configure;
+use App\Component\MediawikiAPIComponent;
 
 class ArticleController extends AppController {
 	//
-	//----- helper functions -----
-	
-	/************************************************************************************
-	 * method to login on mediawiki
-	 *
-	 * @param	string	$mw_user
-	 * @param	string	$mw_pass
-	 * @return	array	
-	 ************************************************************************************/
-	protected function mw_login( $mw_user, $mw_pass ) {
-		//
-		$mw_conf	= Configure::read('mediawiki');
-		$http		= new Client( [ 'host' => $mw_conf['url'] . '/' . $mw_conf['apifile'], 'scheme' => $mw_conf['scheme'] ] );
-		
-		// get login token
-		$response	= $http->post( '?action=login&format=json', [ 'lgname' => $mw_user, 'lgpassword' => $mw_pass ] );
-		
-		if ( !empty( $response->cookies[$mw_conf['cookieprefix'] . '_session']['value'] ) ) {
-			// set cookie
-			setcookie( $mw_conf['cookieprefix'] . '_session', $response->cookies[$mw_conf['cookieprefix'] . '_session']['value'], time() + 3600 * 24 * 60, "/" );
-		}
-		
-		// try login
-		$response	= $http->post( '?action=login&format=json', [ 'lgname' => $mw_user, 'lgpassword' => $mw_pass, 'lgtoken' => json_decode( $response->body )->login->token ] );
-		$json		= json_decode( $response->body );
-		$cookies	= $response;
-		
-		// set cookies
-		if ( $json->login->result == 'Success' ) {
-			// set cookies
-			setcookie( $mw_conf['cookieprefix'] . "UserID", $response->cookies[$mw_conf['cookieprefix'] . 'UserID']['value'], time() + 3600 * 24 * 60, "/" );
-			setcookie( $mw_conf['cookieprefix'] . "UserName", $response->cookies[$mw_conf['cookieprefix'] . 'UserName']['value'], time() + 3600 * 24 * 60, "/" );
-			setcookie( $mw_conf['cookieprefix'] . "Token", $response->cookies[$mw_conf['cookieprefix'] . 'Token']['value'], time() + 3600 * 24 * 60, "/" );
-			setcookie( $mw_conf['cookieprefix'] . "LoggedOut", "", time() - 3600, "/" );
-		} else {
-			// delete cookie
-			setcookie( $mw_conf['cookieprefix'] . '_session', $response->cookies[$mw_conf['cookieprefix'] . '_session']['value'], time() - 3600 * 24 * 60, "/" );
-		}
-		
-		return $json;
-	}
-	
 	/************************************************************************************
 	 *
 	 *
 	 ************************************************************************************/
-	protected function mw_logout() {
-		//
-		$mw_conf	= Configure::read('mediawiki');
-		$http		= new Client( [ 'host' => $mw_conf['url'] . '/' . $mw_conf['apifile'], 'scheme' => $mw_conf['scheme'] ] );
-		
-		//
-		$response	= $http->get( '?action=logout&format=json' );
-		
-		return json_decode( $response->body );
-	}
-	
-	/************************************************************************************
-	 *
-	 *
-	 ************************************************************************************/
-	protected function mw_getEditToken() {
-		//
-		$mw_conf	= Configure::read('mediawiki');
-		$http		= new Client( [ 'host' => $mw_conf['url'] . '/' . $mw_conf['apifile'], 'scheme' => $mw_conf['scheme'] ] );
-		
-		// get edit token
-		$response	= $http->get( '?action=query&meta=tokens&type=csrf&rawcontinue&continue&format=json ' );
-		
-		return json_decode( $response->body );
-	}
-	
-	/************************************************************************************
-	 *
-	 *
-	 ************************************************************************************/
-	protected function mw_testEditToken( $token ) {
-		//
-		$mw_conf	= Configure::read('mediawiki');
-		$http		= new Client( [ 'host' => $mw_conf['url'] . '/' . $mw_conf['apifile'], 'scheme' => $mw_conf['scheme'] ] );
-		
-		//
-		$response	= $http->get( '?action=checktoken&type=csrf&token=' . urlencode( $token ) . '&format=json' );
-		
-		return json_decode( $response->body );
-	}
-	
-	/************************************************************************************
-	 *
-	 *
-	 ************************************************************************************/
-	protected function mw_getArticleByTitle( $title ) {
-		//
-		$mw_conf	= Configure::read('mediawiki');
-		$http		= new Client( [ 'host' => $mw_conf['url'] . '/' . $mw_conf['apifile'], 'scheme' => $mw_conf['scheme'] ] );
-		
-		//
-		$response	= $http->get( '?action=query&prop=revisions&titles=' . $title .'&rvprop=ids|timestamp|content&curtimestamp&rawcontinue&format=json' );
-		
-		return json_decode( $response->body );
-	}
-	
-	/************************************************************************************
-	 *
-	 *
-	 ************************************************************************************/
-	protected function mw_getArticleById( $id ) {
-		//
-		$mw_conf	= Configure::read('mediawiki');
-		$http		= new Client( [ 'host' => $mw_conf['url'] . '/' . $mw_conf['apifile'], 'scheme' => $mw_conf['scheme'] ] );
-		
-		//
-		$response	= $http->get( '?action=query&prop=revisions&pageids=' . $id .'&rvprop=ids|timestamp|content&curtimestamp&rawcontinue&format=json' );
-		
-		return json_decode( $response->body );
-	}
-	
-	/************************************************************************************
-	 *
-	 *
-	 ************************************************************************************/
-	protected function mw_createArticle(  ) {
-		//
-		$mw_conf	= Configure::read('mediawiki');
-		$http		= new Client( [ 'host' => $mw_conf['url'] . '/' . $mw_conf['apifile'], 'scheme' => $mw_conf['scheme'] ] );
-		
-		// curl_setopt( $ch, CURLOPT_POSTFIELDS, "title=" . urlencode( $title ) . "&summary=" . urlencode( $summary ) . "&text=" . $text . "&createonly&watchlist=preferences&contentmodel=wikitext&contentformat=text/x-wiki&basetimestamp=" . $curTimestamp . "&token=" . urlencode( $token ) );
-	}
-	
-	/************************************************************************************
-	 *
-	 *
-	 ************************************************************************************/
-	protected function mw_editArticle( $id = '', $title = '', $text, $summary = '', $editToken, $lastTimestamp  ) {
-		//
-		if ( empty( $id ) && empty( $title ) ) {
-			return false;
-		}
-		
-		//
-		if ( isset( $id ) ) {
-			$mw_article		= "'pageid' => " . $id;
-		} else {
-			$mw_aritcle		= "'title'	=> " . $title;
-		}
-		
-		$mw_conf	= Configure::read('mediawiki');
-		$http		= new Client( [ 'host' => $mw_conf['url'] . '/' . $mw_conf['apifile'], 'scheme' => $mw_conf['scheme'] ] );
-		
-		//$curTimestamp	= date( 'Y-m-d' ) . "T" . date( 'H:i:s' ) . "Z";
-		
-		//
-		$response	= $http->post( '?action=edit&format=json',	[
-																 'pageid'			=> $id,
-																 //'summary'			=> urlencode( $summary ),
-																 'summary'			=> $summary,
-																 //'text'				=> urlencode( $text ),
-																 'text'				=> $text,
-																 'recreate'			=> '',
-																 'watchlist'		=> 'preferences',
-																 'contentmodel'		=> 'wikitext',
-																 'contentformat'	=> 'text/x-wiki',
-																 //'basetimestamp'	=> $lastTimestamp,
-																 'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
-																],
-																[
-																 'headers'			=>	[
-																 						 'Content-type'	=> 'application/x-www-form-urlencoded'
-																 						]
-																]);
-		//		
-		//return $response;
-		return json_decode( $response->body );
+	public function initialize() {
+		parent::initialize();
+		$this->loadComponent( 'MediawikiAPI' );
 	}
 	
 	/************************************************************************************
@@ -197,19 +29,20 @@ class ArticleController extends AppController {
 	 ************************************************************************************/
 	public function index() {
 		// initialise
-		$mw_conf	= Configure::read('mediawiki');
+		$mw_conf	= Configure::read('quorra');
 		
 		// workaround with [*] problem
-		$testingPageId				= 549;
+		//$testingPageId				= 549;
+		$testingPageId				= 554;
 		$textfield					= '*';
 		
 		// login with user
-		$this->mw_login( $mw_conf['testuser'], $mw_conf['testpass'] );
+		$this->MediawikiAPI->mw_login( $mw_conf['mediawiki']['testuser'], $mw_conf['mediawiki']['testpass'] );
 		
 		// get article informations
-		$tempArticle				= $this->mw_getArticleByID( $testingPageId );
+		$tempArticle				= $this->MediawikiAPI->mw_getArticleByID( $testingPageId );
 		
-		$formdata['editToken']		= $this->mw_getEditToken()->query->tokens->csrftoken;
+		$formdata['editToken']		= $this->MediawikiAPI->mw_getEditToken()->query->tokens->csrftoken;
 		$formdata['curTimestamp']	= $tempArticle->curtimestamp;
 		$formdata['articleId']		= $testingPageId;
 		$formdata['articleTitle']	= $tempArticle->query->pages->$testingPageId->title;
@@ -228,8 +61,8 @@ class ArticleController extends AppController {
 			//
 			if ( !empty( $this->request->data['mw_articleTitle'] ) && !empty( $this->request->data['mw_articleContent'] ) ) {
 				//
-				$token		= $this->mw_getEditToken()->query->tokens->csrftoken;
-				$result		= $this->mw_editArticle( $this->request->data['mw_articleId'], $this->request->data['mw_articleTitle'], $this->request->data['mw_articleContent'], 'cakePHP quorra testing', $token, $this->request->data['mw_curTimestamp'] );
+				$token		= $this->MediawikiAPI->mw_getEditToken()->query->tokens->csrftoken;
+				$result		= $this->MediawikiAPI->mw_editArticle( $this->request->data['mw_articleId'], $this->request->data['mw_articleTitle'], $this->request->data['mw_articleContent'], 'cakePHP quorra testing', $token, $this->request->data['mw_curTimestamp'] );
 				
 				// error message receive?
 				if ( isset( $result->error->code ) ) {
@@ -295,8 +128,5 @@ class ArticleController extends AppController {
 		
 		//$this->set( 'data', $data );
 	}
-	
-	
-	
 }
 ?>

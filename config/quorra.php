@@ -7,13 +7,19 @@
  ************************************************************************************/
 //
 return [
-	'mediawiki'	=> [
-			'scheme'		=> 'http',
-			//'url'			=> 'localhost/html/mediawiki',
-			'url'			=> 'blue-eng.km.tu-berlin.de',
-			'apifile'		=> 'api.php',
-			'cookieprefix'	=> 'be-wiki',
-			'testuser'		=> '',
-			'testpass'		=> ''
+	'quorra'	=> [
+					'mediawiki'	=> [
+					'scheme'		=> 'http',
+					'url'			=> 'localhost/html/mediawiki',
+					//'url'			=> 'blue-eng.km.tu-berlin.de',
+					'apifile'		=> 'api.php',
+					'cookieprefix'	=> 'be-wiki',
+					'demouser'		=> '',
+					'demopass'		=> ''
+					],
+					
+					'version'		=> '1.0 Build 3',
+					'srclink'		=> 'blue-eng.km.tu-berlin.de/index.php/Projekt:Quorra'
 	],
+	
 ];
