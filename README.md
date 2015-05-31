@@ -10,9 +10,8 @@ Currently Quorra supports mediawiki Version 1.25 only. The support for older ver
 ##########################################################
 ## Required mediaWiki Extensions
 ##########################################################
-Quorra need some mediaWiki extensions to work.
-
--> Lockdown (http://www.mediawiki.org/wiki/Extension:Lockdown)
+Quorra need some mediaWiki extensions to work:
++ Lockdown (http://www.mediawiki.org/wiki/Extension:Lockdown)
 ##########################################################
 
 
@@ -29,13 +28,12 @@ Quorra need some mediaWiki extensions to work.
 ##########################################################
 ## Changelog Version 1.0 Build 3
 ##########################################################
-new features:
-----------------------------------------------------------
+<strong>new features:</strong>
 + Parser between wikisyntax and HTML supports now:
-++ bold text ( <strong></strong>, <b></b> )
-++ italic text ( <em></em>, <i></i> )
-++ headings
-++ weblinks
++ + bold text
++ + italic text
++ + headings
++ + weblinks
 + Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account (controller: src/Controller/DemositeController.php, views: src/Template/Demosite/*)
 ----------------------------------------------------------
 
@@ -52,7 +50,7 @@ changes:
 
 removes:
 ----------------------------------------------------------
-+ remove model file src/Model/ArticleModel.php
+~~remove model file src/Model/ArticleModel.php~~
 
 ##########################################################
 
