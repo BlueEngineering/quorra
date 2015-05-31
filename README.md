@@ -5,6 +5,7 @@
 Quorra is a managementsystem to administrate a mediawiki installation. It's based on CakePHP Version 3.0 and works with mediawiki API.
 
 Currently Quorra supports mediawiki Version 1.25 only. The support for older versions comes later.
+
 ----------------------------------------------------------
 
 
@@ -12,6 +13,7 @@ Currently Quorra supports mediawiki Version 1.25 only. The support for older ver
 
 Quorra need some mediaWiki extensions to work:
 + Lockdown (http://www.mediawiki.org/wiki/Extension:Lockdown)
+
 ----------------------------------------------------------
 
 # Installation
@@ -19,6 +21,7 @@ Quorra need some mediaWiki extensions to work:
 1. run git pull in your download directory
 2. edit configuration file in config/quorra.php
 
+----------------------------------------------------------
 
 # Changelogs
 
@@ -31,7 +34,7 @@ Quorra need some mediaWiki extensions to work:
   * weblinks
 * Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account<br />( controller: src/Controller/DemositeController.php, views: src/Template/Demosite/* )
 
-*changes:*
+**changes:**
 * mediawiki api controller moves into MediawikiAPIComponent (src/Controller/Component/MediawikiAPIComponent.php)
 * MediawikiAPIComponent:
   * Fixing mw_createArticle()
@@ -40,26 +43,21 @@ Quorra need some mediaWiki extensions to work:
   * add 'srclink' variable where linked projectsite
   * renamed 'testuser' to 'demouser' and 'testpass' to 'demopass'
 
-*removes:*
+**removes:**
 * remove model file src/Model/ArticleModel.php
+
 ----------------------------------------------------------
 
 
-##########################################################
 ## Changelog Version 1.0 Build 2
-##########################################################
-new features:
+**new features:**
+* create some frontend masks
+* create few placeholder
+
 ----------------------------------------------------------
-+ create some frontend masks
-+ create few placeholder
-
-##########################################################
 
 
-##########################################################
 ## Changelog Version 1.0 Build 1
-##########################################################
-new features:
-----------------------------------------------------------
-+ create Quorra as CakePHP application
-+ include Bootstrap framework in version 3.3.4
+**new features:**
+* create Quorra as CakePHP application
+* include Bootstrap framework in version 3.3.4
