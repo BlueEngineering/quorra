@@ -29,29 +29,30 @@ Quorra need some mediaWiki extensions to work.
 ##########################################################
 ## Changelog Version 1.0 Build 3
 ##########################################################
-legend:
+new features:
 ----------------------------------------------------------
-+ new features
-o changes
-- removes
-----------------------------------------------------------
-
 + Parser between wikisyntax and HTML supports now:
-	-> bold text ( <strong></strong>, <b></b> )
-	-> italic text ( <em></em>, <i></i> )
-	-> headings
-	-> weblinks
+++ bold text ( <strong></strong>, <b></b> )
+++ italic text ( <em></em>, <i></i> )
+++ headings
+++ weblinks
 + Add Demosite MVC to testing the Quorra WYSITYG Editor without a mediawiki account (controller: src/Controller/DemositeController.php, views: src/Template/Demosite/*)
+----------------------------------------------------------
 
-o mediawiki api controller moves into MediawikiAPIComponent (src/Controller/Component/MediawikiAPIComponent.php)
-o MediawikiAPIComponent:
-	-> Fixing mw_createArticle()
-o edit quorra config
-	-> add 'version' variable
-	-> add 'srclink' variable where linked projectsite
-	-> renamed 'testuser' to 'demouser' and 'testpass' to 'demopass'
+changes:
+----------------------------------------------------------
++ mediawiki api controller moves into MediawikiAPIComponent (src/Controller/Component/MediawikiAPIComponent.php)
++ MediawikiAPIComponent:
+++ Fixing mw_createArticle()
++ edit quorra config
+++ add 'version' variable
+++ add 'srclink' variable where linked projectsite
+++ renamed 'testuser' to 'demouser' and 'testpass' to 'demopass'
+----------------------------------------------------------
 
-- remove model file src/Model/ArticleModel.php
+removes:
+----------------------------------------------------------
++ remove model file src/Model/ArticleModel.php
 
 ##########################################################
 
@@ -59,14 +60,8 @@ o edit quorra config
 ##########################################################
 ## Changelog Version 1.0 Build 2
 ##########################################################
-legend:
+new features:
 ----------------------------------------------------------
-+ new features
-o changes
-- removes
-
-----------------------------------------------------------
-
 + create some frontend masks
 + create few placeholder
 
@@ -76,15 +71,7 @@ o changes
 ##########################################################
 ## Changelog Version 1.0 Build 1
 ##########################################################
-legend:
+new features:
 ----------------------------------------------------------
-+ new features
-o changes
-- removes
-
-----------------------------------------------------------
-
 + create Quorra as CakePHP application
 + include Bootstrap framework in version 3.3.4
-
-##########################################################
