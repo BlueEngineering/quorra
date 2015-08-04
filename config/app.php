@@ -9,7 +9,7 @@ return [
      * Development Mode:
      * true: Errors and warnings shown.
      */
-    'debug' => true,
+    'debug' => false,
 
     /**
      * Configure basic information about the application.
@@ -219,9 +219,9 @@ return [
              * the following line and set the port accordingly
              */
             //'port' => 'nonstandard_port_number',
-            'username' => 'quorra',
-            'password' => 'killme',
-            'database' => 'quorra',
+            'username' => '',
+            'password' => '',
+            'database' => '',
             'encoding' => 'utf8',
             'timezone' => 'UTC',
             'cacheMetadata' => true,
@@ -255,9 +255,9 @@ return [
             'persistent' => false,
             'host' => 'localhost',
             //'port' => 'nonstandard_port_number',
-            'username' => 'quorra',
-            'password' => 'killme',
-            'database' => 'quorra',
+            'username' => '',
+            'password' => '',
+            'database' => '',
             'encoding' => 'utf8',
             'timezone' => 'UTC',
             'cacheMetadata' => true,

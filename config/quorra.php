@@ -10,15 +10,14 @@ return [
 	'quorra'	=> [
 					'mediawiki'	=> [
 					'scheme'		=> 'http',
-					'url'			=> 'localhost/html/mediawiki',
-					//'url'			=> 'blue-eng.km.tu-berlin.de',
+					'url'			=> '',
 					'apifile'		=> 'api.php',
-					'cookieprefix'	=> 'be-wiki',
+					'cookieprefix'	=> '',
 					'demouser'		=> '',
 					'demopass'		=> ''
 					],
 					
-					'version'		=> '1.0 Build 3',
+					'version'		=> '1.0 Build 4',
 					'srclink'		=> 'blue-eng.km.tu-berlin.de/index.php/Projekt:Quorra'
 	],
 	

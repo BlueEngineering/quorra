@@ -10,6 +10,7 @@ namespace App\Controller\Component;
 
 use Cake\Controller\Component;
 use Cake\Network\Http\Client;
+use Cake\Network\Session;
 use Cake\Controller\Component\CookieComponent;
 use Cake\Core\Configure;
 
@@ -22,34 +23,37 @@ class MediawikiAPIComponent extends Component {
 	 * @return	json array
 	 ************************************************************************************/
 	public function mw_login( $mw_user, $mw_pass ) {
-		//
+		// init 
 		$mw_conf	= Configure::read('quorra');
 		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
 		
 		// get login token
 		$response	= $http->post( '?action=login&format=json', [ 'lgname' => $mw_user, 'lgpassword' => $mw_pass ] );
+		$json		= json_decode( $response->body );
 		
 		if ( !empty( $response->cookies[$mw_conf['mediawiki']['cookieprefix'] . '_session']['value'] ) ) {
 			// set cookie
 			setcookie( $mw_conf['mediawiki']['cookieprefix'] . '_session', $response->cookies[$mw_conf['mediawiki']['cookieprefix'] . '_session']['value'], time() + 3600 * 24 * 60, "/" );
 		}
 		
+		if( empty( $json->login->token ) ) {
+			return $json;
+		}
+		
 		// try login
 		$response	= $http->post( '?action=login&format=json', [ 'lgname' => $mw_user, 'lgpassword' => $mw_pass, 'lgtoken' => json_decode( $response->body )->login->token ] );
 		$json		= json_decode( $response->body );
-		$cookies	= $response;
-		
+				
 		// set cookies
 		if ( $json->login->result == 'Success' ) {
 			// set cookies
 			setcookie( $mw_conf['mediawiki']['cookieprefix'] . "UserID", $response->cookies[$mw_conf['mediawiki']['cookieprefix'] . 'UserID']['value'], time() + 3600 * 24 * 60, "/" );
 			setcookie( $mw_conf['mediawiki']['cookieprefix'] . "UserName", $response->cookies[$mw_conf['mediawiki']['cookieprefix'] . 'UserName']['value'], time() + 3600 * 24 * 60, "/" );
 			setcookie( $mw_conf['mediawiki']['cookieprefix'] . "Token", $response->cookies[$mw_conf['mediawiki']['cookieprefix'] . 'Token']['value'], time() + 3600 * 24 * 60, "/" );
-			setcookie( $mw_conf['mediawiki']['cookieprefix'] . "LoggedOut", "", time() - 3600, "/" );
-		} else {
-			// delete cookie
-			setcookie( $mw_conf['mediawiki']['cookieprefix'] . '_session', $response->cookies[$mw_conf['mediawiki']['cookieprefix'] . '_session']['value'], time() - 3600 * 24 * 60, "/" );
 		}
+		
+		//$response	= $http->get( '?action=query&meta=userinfo&rawcontinue&uiprop=realname|email|groups&format=json', [], [] );
+		//$json		.= json_decode( $response->body );
 		
 		return $json;
 	}
@@ -67,6 +71,33 @@ class MediawikiAPIComponent extends Component {
 		//
 		$response	= $http->get( '?action=logout&format=json' );
 		
+		return json_decode( $response->body );
+	}
+	
+	/************************************************************************************
+	 * get userinformation from mediawiki
+	 *
+	 ************************************************************************************/
+	public function mw_getUserinfos() {
+		// load mediawiki informations from quorras config file
+		$mw_conf	= Configure::read( 'quorra' );
+				
+		// create a new http connection
+		
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+		//$http->cookies( $mw_conf['mediawiki']['cookieprefix'] . 'UserID' )
+		
+				
+		// call http methode
+		$response	= $http->get( '?action=query&meta=userinfo&rawcontinue&uiprop=realname|email|groups&format=json', [], [
+			'type' => 'json',
+			'cookies'	=> [
+				$mw_conf['mediawiki']['cookieprefix'] . '_session' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserID' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserName' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'Token' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
+			] ] );
+				
 		return json_decode( $response->body );
 	}
 	
@@ -100,6 +131,196 @@ class MediawikiAPIComponent extends Component {
 		//
 		$response	= $http->get( '?action=checktoken&type=csrf&token=' . urlencode( $token ) . '&format=json' );
 		
+		return json_decode( $response->body );
+	}
+	
+	/************************************************************************************
+	 * get article informations from mediawiki by article title
+	 *
+	 * @param	string	$title, title of mediawiki article
+	 * @return	json array
+	 ************************************************************************************/
+	public function mw_getArticleByTitle( $title ) {
+		//
+		$mw_conf	= Configure::read('quorra');
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+				
+		//
+		$response	= $http->get( '?action=query&prop=revisions&titles=' . $title .'&rvprop=ids|timestamp|content&curtimestamp&rawcontinue&format=json' );
+				
+		return json_decode( $response->body );
+	}
+	
+	/************************************************************************************
+	 * get article informations form mediawiki by article id
+	 *
+	 * @param	int		$id, id of mediawiki article
+	 * @return	json array
+	 ************************************************************************************/
+	public function mw_getArticleById( $id ) {
+		//
+		$mw_conf	= Configure::read('quorra');
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+				
+		//
+		$response	= $http->get( '?action=query&prop=revisions&pageids=' . $id .'&rvprop=ids|timestamp|content&curtimestamp&rawcontinue&format=json' );
+		
+		return json_decode( $response->body );
+	}
+	
+	/************************************************************************************
+	 * create a new mediawiki article if their don't exists.
+	 *
+	 * @param	string	$title		title of new mediawiki article
+	 * @param	string	$text		text content of new mediawiki article
+	 * @param	string	$summary	a summary where descripte edits in few words.
+	 * @param	string	$editToken	edit token. required by mediawiki
+	 * @return	json	array
+	 ************************************************************************************/
+	public function mw_createArticle( $title, $text, $summary = '', $editToken ) {
+		// is $title or $text doesn't exist return false
+		if ( empty( $title ) || empty( $text ) ) {
+			return false;
+		}
+		
+		// load quorra config
+		$mw_conf	= Configure::read('quorra');
+		
+		// create connection to mediawiki
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+		
+		// execute
+		$response	= $http->post( '?action=edit&format=json',	[
+																 'title'			=> trim( $title ),
+																 //'summary'			=> urlencode( $summary ),
+																 'summary'			=> trim( $summary ),
+																 //'text'				=> urlencode( $text ),
+																 'text'				=> $text,
+																 'createonly'		=> '',
+																 'watchlist'		=> 'preferences',
+																 'contentmodel'		=> 'wikitext',
+																 'contentformat'	=> 'text/x-wiki',
+																 //'basetimestamp'	=> $lastTimestamp,
+																 'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
+																],
+																[
+																 'headers'			=>	[
+																 						 'Content-type'	=> 'application/x-www-form-urlencoded',
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . '_session = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserID = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserName = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'Token = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
+																 						]
+																] );
+		// return mediawiki api answer
+		return json_decode( $response->body );
+	}
+	
+	/************************************************************************************
+	 * edit an existing mediawiki article
+	 *
+	 * @param	int		$id			id of mediawiki article (required if title is not set)
+	 * @param	string	$title		title of mediawiki article (required if id is not set)
+	 * @param	string	$text		text of mediawiki article who will edit.
+	 * @param	string	$summary	a summary where descripte edits in few words.
+	 * @param	string	$editToken	edit token. required by mediawiki
+	 * @param	string	$lastTimestamp	last received timestamp of last article changes 
+	 * @return	json	array
+	 ************************************************************************************/
+	public function mw_editArticle( $id = '', $title = '', $text, $summary = '', $editToken, $lastTimestamp  ) {
+		// $id and $title doesn't exist return false
+		if ( empty( $id ) && empty( $title ) ) {
+			return false;
+		}
+		
+		// is $id set use this else use $title
+		if ( isset( $id ) ) {
+			$mw_article		= "'pageid' => " . $id;
+		} else {
+			$mw_aritcle		= "'title'	=> " . $title;
+		}
+		
+		// load quorra config
+		$mw_conf	= Configure::read('quorra');
+				
+		// create connection to mediawiki api
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+				
+		// create current timestamp for finding edit conflicts
+		//$curTimestamp	= date( 'Y-m-d' ) . "T" . date( 'H:i:s' ) . "Z";
+		
+		// execute api call
+		$response	= $http->post( '?action=edit&format=json',	[
+																 'pageid'			=> $id,
+																 //'summary'			=> urlencode( $summary ),
+																 'summary'			=> $summary,
+																 //'text'				=> urlencode( $text ),
+																 'text'				=> $text,
+																 'recreate'			=> '',
+																 'watchlist'		=> 'preferences',
+																 'contentmodel'		=> 'wikitext',
+																 'contentformat'	=> 'text/x-wiki',
+																 //'basetimestamp'	=> $lastTimestamp,
+																 'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
+																],
+																[
+																 'headers'			=>	[
+																 						 'Content-type'	=> 'application/x-www-form-urlencoded',
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . '_session = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserID = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserName = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'Token = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
+																 						]
+																]);
+		// return mediawiki api answer
+		return json_decode( $response->body );
+	}
+	
+	/************************************************************************************
+	 * edit an existing mediawiki article
+	 *
+	 * @param	int		$id			id of mediawiki article (required if title is not set)
+	 * @param	string	$title		title of mediawiki article (required if id is not set)
+	 * @param	string	$text		text of mediawiki article who will edit.
+	 * @param	string	$summary	a summary where descripte edits in few words.
+	 * @param	string	$editToken	edit token. required by mediawiki
+	 * @param	string	$lastTimestamp	last received timestamp of last article changes 
+	 * @return	json	array
+	 ************************************************************************************/
+	public function mw_createUseraccount( $name, $pass, $email, $rlname ) {
+		// checking
+		
+		// load quorra config
+		$mw_conf	= Configure::read('quorra');
+		
+		// create connection to mediawiki api
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+		
+		// execute api call to get creating account token
+		$response	= $http->post( '?action=createaccount&format=json',	[
+																 			'name'			=> $name,
+																			'password'		=> $pass,
+																			'email'			=> $email,
+																			'realname'		=> $rlname,
+																			'reason'		=> 'Benutzeraccount wurde über Quorra von xy angelegt.',
+																			'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
+																],
+																[
+																 'headers'			=>	[
+																 						 'Content-type'	=> 'application/x-www-form-urlencoded',
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . '_session = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserID = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserName = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
+																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'Token = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
+																 						]
+																]);
+		//
+		echo '<br /><br /><br />';
+		echo '<pre>';
+		print_r( $response );
+		echo '</pre>';
+		
+		// return mediawiki api answer
 		return json_decode( $response->body );
 	}
 	
@@ -325,142 +546,6 @@ class MediawikiAPIComponent extends Component {
 		}
 		
 		return $magicWords;
-	}
-	
-	/************************************************************************************
-	 * get article informations from mediawiki by article title
-	 *
-	 * @param	string	$title, title of mediawiki article
-	 * @return	json array
-	 ************************************************************************************/
-	public function mw_getArticleByTitle( $title ) {
-		//
-		$mw_conf	= Configure::read('quorra');
-		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
-		
-		//
-		$response	= $http->get( '?action=query&prop=revisions&titles=' . $title .'&rvprop=ids|timestamp|content&curtimestamp&rawcontinue&format=json' );
-		
-		return json_decode( $response->body );
-	}
-	
-	/************************************************************************************
-	 * get article informations form mediawiki by article id
-	 *
-	 * @param	int		$id, id of mediawiki article
-	 * @return	json array
-	 ************************************************************************************/
-	public function mw_getArticleById( $id ) {
-		//
-		$mw_conf	= Configure::read('quorra');
-		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
-		
-		//
-		$response	= $http->get( '?action=query&prop=revisions&pageids=' . $id .'&rvprop=ids|timestamp|content&curtimestamp&rawcontinue&format=json' );
-		
-		return json_decode( $response->body );
-	}
-	
-	/************************************************************************************
-	 * create a new mediawiki article if their don't exists.
-	 *
-	 * @param	string	$title		title of new mediawiki article
-	 * @param	string	$text		text content of new mediawiki article
-	 * @param	string	$summary	a summary where descripte edits in few words.
-	 * @param	string	$editToken	edit token. required by mediawiki
-	 * @return	json	array
-	 ************************************************************************************/
-	public function mw_createArticle( $title, $text, $summary = '', $editToken ) {
-		// is $title or $text doesn't exist return false
-		if ( empty( $title ) || empty( $text ) ) {
-			return false;
-		}
-		
-		// load quorra config
-		$mw_conf	= Configure::read('quorra');
-		
-		// create connection to mediawiki
-		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
-		
-		// execute
-		$response	= $http->post( '?action=edit&format=json',	[
-																 'title'			=> trim( $title ),
-																 //'summary'			=> urlencode( $summary ),
-																 'summary'			=> trim( $summary ),
-																 //'text'				=> urlencode( $text ),
-																 'text'				=> $text,
-																 'createonly'		=> '',
-																 'watchlist'		=> 'preferences',
-																 'contentmodel'		=> 'wikitext',
-																 'contentformat'	=> 'text/x-wiki',
-																 //'basetimestamp'	=> $lastTimestamp,
-																 'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
-																],
-																[
-																 'headers'			=>	[
-																 						 'Content-type'	=> 'application/x-www-form-urlencoded'
-																 						]
-																] );
-		// return mediawiki api answer
-		return json_decode( $response->body );
-		
-		// curl_setopt( $ch, CURLOPT_POSTFIELDS, "title=" . urlencode( $title ) . "&summary=" . urlencode( $summary ) . "&text=" . $text . "&createonly&watchlist=preferences&contentmodel=wikitext&contentformat=text/x-wiki&basetimestamp=" . $curTimestamp . "&token=" . urlencode( $token ) );
-	}
-	
-	/************************************************************************************
-	 * edit an existing mediawiki article
-	 *
-	 * @param	int		$id			id of mediawiki article (required if title is not set)
-	 * @param	string	$title		title of mediawiki article (required if id is not set)
-	 * @param	string	$text		text of mediawiki article who will edit.
-	 * @param	string	$summary	a summary where descripte edits in few words.
-	 * @param	string	$editToken	edit token. required by mediawiki
-	 * @param	string	$lastTimestamp	last received timestamp of last article changes 
-	 * @return	json	array
-	 ************************************************************************************/
-	public function mw_editArticle( $id = '', $title = '', $text, $summary = '', $editToken, $lastTimestamp  ) {
-		// $id and $title doesn't exist return false
-		if ( empty( $id ) && empty( $title ) ) {
-			return false;
-		}
-		
-		// is $id set use this else use $title
-		if ( isset( $id ) ) {
-			$mw_article		= "'pageid' => " . $id;
-		} else {
-			$mw_aritcle		= "'title'	=> " . $title;
-		}
-		
-		// load quorra config
-		$mw_conf	= Configure::read('quorra');
-		
-		// create connection to mediawiki api
-		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
-		
-		// create current timestamp for finding edit conflicts
-		//$curTimestamp	= date( 'Y-m-d' ) . "T" . date( 'H:i:s' ) . "Z";
-		
-		// execute api call
-		$response	= $http->post( '?action=edit&format=json',	[
-																 'pageid'			=> $id,
-																 //'summary'			=> urlencode( $summary ),
-																 'summary'			=> $summary,
-																 //'text'				=> urlencode( $text ),
-																 'text'				=> $text,
-																 'recreate'			=> '',
-																 'watchlist'		=> 'preferences',
-																 'contentmodel'		=> 'wikitext',
-																 'contentformat'	=> 'text/x-wiki',
-																 //'basetimestamp'	=> $lastTimestamp,
-																 'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
-																],
-																[
-																 'headers'			=>	[
-																 						 'Content-type'	=> 'application/x-www-form-urlencoded'
-																 						]
-																]);
-		// return mediawiki api answer
-		return json_decode( $response->body );
 	}
 }
 ?>

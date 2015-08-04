@@ -12,6 +12,8 @@ namespace App\Controller;
 use App\Controller\AppController;
 use Cake\Core\Configure;
 use App\Component\MediawikiAPIComponent;
+use Cake\Network\Session;
+use Cake\Event\Event;
 
 class DemositeController extends AppController {
 	//
@@ -24,23 +26,26 @@ class DemositeController extends AppController {
 		$this->loadComponent( 'MediawikiAPI' );
 	}
 	
+	public function beforeFilter( Event $event ) {
+		$this->Auth->allow();
+	}
+	
+	
 	/************************************************************************************
 	 * Method to initialise demo function
 	 *
 	 ************************************************************************************/
 	public function index() {
 		// read mediawiki settings from config file
-		//$mw_conf	= "";
-		$mw_conf	= Configure::read('quorra');
+		$mw_conf		= Configure::read('quorra');
 		$demositeTitle	= "Demo:Demosite";
-		
-		
+				
 		// login with user
 		$this->MediawikiAPI->mw_login( $mw_conf['mediawiki']['demouser'], $mw_conf['mediawiki']['demopass'] );
-		
+				
 		// get demosite id
 		$demositeId					= key( $this->MediawikiAPI->mw_getArticleByTitle( $demositeTitle )->query->pages );
-		
+						
 		// workaround with [*] problem
 		$textfield					= '*';
 		
@@ -56,15 +61,7 @@ class DemositeController extends AppController {
 			$formdata['articleTitle']	= $tempArticle->query->pages->$demositeId->title;
 			//$formdata['magicWords']		= $this->MediawikiAPI->mw_parseMagicWords( $tempArticle->query->pages->$demositeId->revisions[0]->$textfield );
 			$formdata['articleText']	= $this->MediawikiAPI->mw_parsingWikisyntaxToHtml( $tempArticle->query->pages->$demositeId->revisions[0]->$textfield );
-			
-			/*
-			echo "<br /><br /><br /><pre>";
-			print_r( $formdata );
-			echo "</pre>";
-			*/
-			
-			//echo "<br /><br /><br />" . $formdata['articleText'] . "<br /><br /><br />";
-			
+						
 		} else {
 			// create timestamp in mediawiki format
 			$formdata['curTimestamp']	= date( 'Y-m-d' ) . "T" . date( 'H:i:s' ) . "Z";

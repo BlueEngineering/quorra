@@ -24,6 +24,21 @@ Quorra need some mediaWiki extensions to work:
 
 # Changelogs
 
+## Version 1.0 Build 4
+**new features:**
+* adding Users MVC with authentification 
+  * controller: src/Controller/UsersController.php
+  * model: src/Model/Table/UsersTable.php
+  * view: src/Template/Users/*
+* MediawikiAPIComponent:
+  * Adding mw_getUserinfos()
+
+**changes / bugfixing:**
+* MediawikiAPIComponent:
+  * Fixing mw_createArticle()
+
+
+
 ## Version 1.0 Build 3
 **new features:**
 * Parser between wikisyntax and HTML supports now:
@@ -38,8 +53,6 @@ Quorra need some mediaWiki extensions to work:
 **changes:**
 * mediawiki api controller moves into MediawikiAPIComponent
   * src/Controller/Component/MediawikiAPIComponent.php
-* MediawikiAPIComponent:
-  * Fixing mw_createArticle()
 * edit quorra config
   * add 'version' variable
   * add 'srclink' variable where linked projectsite
@@ -50,14 +63,14 @@ Quorra need some mediaWiki extensions to work:
 
 
 
-## Changelog Version 1.0 Build 2
+## Version 1.0 Build 2
 **new features:**
 * create some frontend masks
 * create few placeholder
 
 
 
-## Changelog Version 1.0 Build 1
+## Version 1.0 Build 1
 **new features:**
 * create Quorra as CakePHP application
 * include Bootstrap framework in version 3.3.4

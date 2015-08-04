@@ -1,17 +1,4 @@
 <!-- src/Template/Article/index.ctp - main template of article -->
-		<script type="text/javascript">
-			tinymce.init({
-				selector:	"textarea",
-				theme:		"modern",
-				width:		'100%',
-				height:		700,
-				plugins:    "advlist autolink link image lists charmap print preview hr anchor pagebreak spellchecker searchreplace wordcount visualblocks visualchars code fullscreen insertdatetime media nonbreaking save table contextmenu directionality emoticons template paste textcolor",
-				statusbar:  false,
-				menubar:    false,
-				toolbar:    "insertfile undo redo | styleselect | bold italic | alignleft aligncenter alignright alignjustify | bullist numlist outdent indent | link image | print preview media fullpage | forecolor backcolor emoticons | code"
-			});
-		</script>
-		
 		<div class="md-10">
 			<h1>Demosite für Quorra WYSIWYG-Editor</h1>
 			<p>
@@ -21,6 +8,8 @@
 			<p>
 			<!-- form starts -->
 			<?=
+			$this->Html->script( 'quorra.js' );
+			
 			$this->Html->script('tinymce/tinymce.min.js', [ 'block' => 'script' ] );
 			
 			echo $this->Form->create( null, [ 'url' => [ 'controller' => 'Demosite', 'action' => 'edit' ] ] );
@@ -35,7 +24,7 @@
 			
 			echo '</p><p>';
 			
-			echo $this->Form->textarea( 'mw_articleContent', [ 'value' => $data['articleText'], 'class' => 'form-control' ] );
+			echo $this->Form->textarea( 'mw_articleContent', [ 'value' => $data['articleText'] . 'blabla', 'class' => 'form-control' ] );
 			
 			//echo $this->Form->reset( 'Zurücksetzen', [ 'type' => 'reset' ] );
 			echo $this->Form->submit( 'Speichern', [ 'type' => 'submit', 'class' => 'btn btn-primary' ] );

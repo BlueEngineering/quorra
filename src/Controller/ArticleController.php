@@ -36,11 +36,18 @@ class ArticleController extends AppController {
 		$testingPageId				= 554;
 		$textfield					= '*';
 		
+		
 		// login with user
-		$this->MediawikiAPI->mw_login( $mw_conf['mediawiki']['testuser'], $mw_conf['mediawiki']['testpass'] );
+		$this->MediawikiAPI->mw_login( $mw_conf['mediawiki']['demouser'], $mw_conf['mediawiki']['demopass'] );
 		
 		// get article informations
 		$tempArticle				= $this->MediawikiAPI->mw_getArticleByID( $testingPageId );
+		
+		
+		echo '<br /><br /><br />';
+		echo '<pre>';
+		print_r($tempArticle);
+		echo '</pre>';
 		
 		$formdata['editToken']		= $this->MediawikiAPI->mw_getEditToken()->query->tokens->csrftoken;
 		$formdata['curTimestamp']	= $tempArticle->curtimestamp;

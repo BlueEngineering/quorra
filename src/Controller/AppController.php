@@ -15,6 +15,8 @@
 namespace App\Controller;
 
 use Cake\Controller\Controller;
+use Cake\Event\Event;
+use Cake\Core\Configure;
 
 /**
  * Application Controller
@@ -34,9 +36,33 @@ class AppController extends Controller
      *
      * @return void
      */
-    public function initialize()
-    {
+    public function initialize() {
+		// load parent initialize objects
         parent::initialize();
-        $this->loadComponent('Flash');
+		
+		// load components for global use
+        $this->loadComponent( 'Flash' );
+		$this->loadComponent( 'Auth', [
+			'loginRedirect'		=> [
+				'controller'		=> 'users',
+				'action'			=> 'index'
+			],
+			'logoutRedirect'	=> [
+				'controller'		=> 'users',
+				'action'			=> 'login'
+			]
+		] );
+		
+		// set global variables
+		$confApp	= Configure::read('debug');
+		$this->set( 'confApp', $confApp );
+		$this->set( 'user', $this->Auth->user() );
     }
+	
+	/**
+	 * filter function
+	 */
+	public function beforeFilter( Event $event ) {
+		$this->Auth->deny();
+	}
 }
