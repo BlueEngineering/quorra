@@ -52,9 +52,6 @@ class MediawikiAPIComponent extends Component {
 			setcookie( $mw_conf['mediawiki']['cookieprefix'] . "Token", $response->cookies[$mw_conf['mediawiki']['cookieprefix'] . 'Token']['value'], time() + 3600 * 24 * 60, "/" );
 		}
 		
-		//$response	= $http->get( '?action=query&meta=userinfo&rawcontinue&uiprop=realname|email|groups&format=json', [], [] );
-		//$json		.= json_decode( $response->body );
-		
 		return $json;
 	}
 	
@@ -64,12 +61,20 @@ class MediawikiAPIComponent extends Component {
 	 * @return	json array
 	 ************************************************************************************/
 	public function mw_logout() {
-		//
+		// load configuration file of quorra
 		$mw_conf	= Configure::read('quorra');
+		
+		// init http request
 		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
 		
-		//
+		// execute http request
 		$response	= $http->get( '?action=logout&format=json' );
+		
+		// delete cookies
+		setcookie( $mw_conf['mediawiki']['cookieprefix'] . '_session', '', time() - 3600 * 24 * 60, "/" );
+		setcookie( $mw_conf['mediawiki']['cookieprefix'] . "UserID", '', time() - 3600 * 24 * 60, "/" );
+		setcookie( $mw_conf['mediawiki']['cookieprefix'] . "UserName", '', time() - 3600 * 24 * 60, "/" );
+		setcookie( $mw_conf['mediawiki']['cookieprefix'] . "Token", '', time() - 3600 * 24 * 60, "/" );
 		
 		return json_decode( $response->body );
 	}
@@ -78,7 +83,7 @@ class MediawikiAPIComponent extends Component {
 	 * get userinformation from mediawiki
 	 *
 	 ************************************************************************************/
-	public function mw_getUserinfos() {
+	public function mw_getMyUserinfos() {
 		// load mediawiki informations from quorras config file
 		$mw_conf	= Configure::read( 'quorra' );
 				
@@ -112,8 +117,14 @@ class MediawikiAPIComponent extends Component {
 		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
 		
 		// get edit token
-		$response	= $http->get( '?action=query&meta=tokens&type=csrf&rawcontinue&continue&format=json ' );
-		
+		$response	= $http->get( '?action=query&meta=tokens&type=csrf&rawcontinue&continue&format=json', [], [
+			'cookies'	=> [
+				$mw_conf['mediawiki']['cookieprefix'] . '_session' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserID' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserName' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'Token' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
+			] ] );
+			
 		return json_decode( $response->body );
 	}
 	
@@ -129,7 +140,13 @@ class MediawikiAPIComponent extends Component {
 		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
 		
 		//
-		$response	= $http->get( '?action=checktoken&type=csrf&token=' . urlencode( $token ) . '&format=json' );
+		$response	= $http->get( '?action=checktoken&type=csrf&token=' . urlencode( $token ) . '&format=json', [], [
+			'cookies'	=> [
+				$mw_conf['mediawiki']['cookieprefix'] . '_session' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserID' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserName' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'Token' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
+			] ] );
 		
 		return json_decode( $response->body );
 	}
@@ -191,27 +208,25 @@ class MediawikiAPIComponent extends Component {
 		
 		// execute
 		$response	= $http->post( '?action=edit&format=json',	[
-																 'title'			=> trim( $title ),
-																 //'summary'			=> urlencode( $summary ),
-																 'summary'			=> trim( $summary ),
-																 //'text'				=> urlencode( $text ),
-																 'text'				=> $text,
-																 'createonly'		=> '',
-																 'watchlist'		=> 'preferences',
-																 'contentmodel'		=> 'wikitext',
-																 'contentformat'	=> 'text/x-wiki',
-																 //'basetimestamp'	=> $lastTimestamp,
-																 'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
-																],
-																[
-																 'headers'			=>	[
-																 						 'Content-type'	=> 'application/x-www-form-urlencoded',
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . '_session = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserID = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserName = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'Token = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
-																 						]
-																] );
+			'title'			=> trim( $title ),
+			'summary'		=> trim( $summary ),
+			'text'			=> $text,
+			'createonly'	=> '',
+			'watchlist'		=> 'preferences',
+			'contentmodel'	=> 'wikitext',
+			'contentformat'	=> 'text/x-wiki',
+			//'basetimestamp'	=> $lastTimestamp,
+			'token'			=> $editToken
+		], [
+			'headers'			=>	[
+				'Content-type'	=> 'application/x-www-form-urlencoded'
+			],
+			'cookies'			=> [
+				$mw_conf['mediawiki']['cookieprefix'] . '_session' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserID' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserName' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName']
+			]
+		] );
 		// return mediawiki api answer
 		return json_decode( $response->body );
 	}
@@ -251,27 +266,25 @@ class MediawikiAPIComponent extends Component {
 		
 		// execute api call
 		$response	= $http->post( '?action=edit&format=json',	[
-																 'pageid'			=> $id,
-																 //'summary'			=> urlencode( $summary ),
-																 'summary'			=> $summary,
-																 //'text'				=> urlencode( $text ),
-																 'text'				=> $text,
-																 'recreate'			=> '',
-																 'watchlist'		=> 'preferences',
-																 'contentmodel'		=> 'wikitext',
-																 'contentformat'	=> 'text/x-wiki',
-																 //'basetimestamp'	=> $lastTimestamp,
-																 'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
-																],
-																[
-																 'headers'			=>	[
-																 						 'Content-type'	=> 'application/x-www-form-urlencoded',
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . '_session = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserID = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserName = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'Token = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
-																 						]
-																]);
+			'pageid'			=> $id,
+			'summary'			=> $summary,
+			'text'				=> $text,
+			'recreate'			=> '',
+			'watchlist'		=> 'preferences',
+			'contentmodel'		=> 'wikitext',
+			'contentformat'	=> 'text/x-wiki',
+			//'basetimestamp'	=> $lastTimestamp,
+			'token'			=> $editToken
+		], [
+			'headers'			=>	[
+				'Content-type'	=> 'application/x-www-form-urlencoded'
+			],
+			'cookies'			=> [
+				$mw_conf['mediawiki']['cookieprefix'] . '_session' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserID' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserName' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName']
+			]
+		] );
 		// return mediawiki api answer
 		return json_decode( $response->body );
 	}
@@ -287,7 +300,7 @@ class MediawikiAPIComponent extends Component {
 	 * @param	string	$lastTimestamp	last received timestamp of last article changes 
 	 * @return	json	array
 	 ************************************************************************************/
-	public function mw_createUseraccount( $name, $pass, $email, $rlname ) {
+	public function mw_createUseraccount( $name, $pass = '', $email = '', $rlname = '' ) {
 		// checking
 		
 		// load quorra config
@@ -296,34 +309,120 @@ class MediawikiAPIComponent extends Component {
 		// create connection to mediawiki api
 		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
 		
-		// execute api call to get creating account token
-		$response	= $http->post( '?action=createaccount&format=json',	[
-																 			'name'			=> $name,
-																			'password'		=> $pass,
-																			'email'			=> $email,
-																			'realname'		=> $rlname,
-																			'reason'		=> 'Benutzeraccount wurde über Quorra von xy angelegt.',
-																			'token'			=> $editToken //urlencode( '+\\' ) // urlencode( $editToken )
-																],
-																[
-																 'headers'			=>	[
-																 						 'Content-type'	=> 'application/x-www-form-urlencoded',
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . '_session = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserID = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'UserName = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
-																						 'Cookie'		=> $mw_conf['mediawiki']['cookieprefix'] . 'Token = ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
-																 						]
-																]);
-		//
-		echo '<br /><br /><br />';
-		echo '<pre>';
-		print_r( $response );
-		echo '</pre>';
+		// first request to get token
+		$response	= $http->post( '?action=createaccount&format=json', [
+				'name'			=> $name,
+				'password'		=> $pass,
+				'email'			=> $email,
+				'realname'		=> $rlname,
+				'reason'		=> 'Benutzeraccount wurde über Quorra von ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'] . ' angelegt.',
+				'token'			=> ''
+			], [] );
+			
+		$token		= json_decode( $response->body )->createaccount->token;
+			
+		// execute api call to creating account
+		$response	= $http->post( '?action=createaccount&format=json', [
+				'name'			=> $name,
+				'password'		=> $pass,
+				'email'			=> $email,
+				'realname'		=> $rlname,
+				'reason'		=> 'Benutzeraccount wurde über Quorra von ' . $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'] . ' angelegt.',
+				'token'			=> $token
+			], [] );
 		
 		// return mediawiki api answer
 		return json_decode( $response->body );
 	}
 	
+	
+	/************************************************************************************
+	 * get userinformations of given username (one of them required)
+	 *
+	 * @param		$username, mw login name
+	 * @return		array with userinformations
+	 ************************************************************************************/
+	public function mw_getUserinfos( $username ) {
+		// load quorra configuration with mediawiki informations
+		$mw_conf	= Configure::read( 'quorra' );
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+		
+		// call http method get to receive userinformations
+		$response	= $http->get( '?action=query&list=users&usprop=blockinfo|groups|gender&ususers=' . $username . '&rawcontinue&continue&format=json', [], [
+			'cookies'	=> [
+				$mw_conf['mediawiki']['cookieprefix'] . '_session' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserID' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserName' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'Token' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
+			]
+		] );
+		
+		return json_decode( $response->body );
+	}
+	
+	/************************************************************************************
+	 * 
+	 *
+	 * @return json array
+	 ************************************************************************************/
+	public function mw_getUserrightToken() {
+		//
+		$mw_conf	= Configure::read('quorra');
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+				
+		// get edit token
+		$response	= $http->get( '?action=query&meta=tokens&type=userrights&rawcontinue&continue&format=json', [], [
+			'cookies'	=> [
+				$mw_conf['mediawiki']['cookieprefix'] . '_session' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserID' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'UserName' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName'],
+				$mw_conf['mediawiki']['cookieprefix'] . 'Token' => $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'Token']
+			] ] );
+		
+		return json_decode( $response->body );
+	}
+	
+	
+	/************************************************************************************
+	 *
+	 *
+	 ************************************************************************************/
+	public function mw_editUserrights( $user, $addTo = '', $removeFrom = '', $token ) {
+		//
+		$mw_conf	= Configure::read('quorra');
+		$http		= new Client( [ 'host' => $mw_conf['mediawiki']['url'] . '/' . $mw_conf['mediawiki']['apifile'], 'scheme' => $mw_conf['mediawiki']['scheme'] ] );
+						
+		// set userrights
+		$response	= $http->post( '?action=userrights&format=json', [
+			'user'		=> $user,
+			'add'		=> $addTo,
+			'remove'	=> $removeFrom,
+			'token'		=> $token
+			], [
+				'headers'	=> [
+					'Content-type'	=> 'application/x-www-form-urlencoded'
+				],
+				'cookies'	=> [
+					$mw_conf['mediawiki']['cookieprefix'] . '_session'	=> $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . '_session'],
+					$mw_conf['mediawiki']['cookieprefix'] . 'UserID'	=> $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserID'],
+					$mw_conf['mediawiki']['cookieprefix'] . 'UserName'	=> $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . 'UserName']
+				]
+		] );
+		
+		return json_decode( $response->body );
+	}
+
+
+
+
+
+
+
+
+
+//---------------------------------------------------------------------------------------------------------------
+// TODO und experimentell
+//---------------------------------------------------------------------------------------------------------------
 	/************************************************************************************
 	 * parsing given text from mediawiki syntax into html
 	 *

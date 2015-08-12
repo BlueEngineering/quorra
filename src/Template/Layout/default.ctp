@@ -47,41 +47,79 @@
 				</button>
 				<li><?= $this->Html->link( 'Quorra', '/pages/home', [ 'class' => 'navbar-brand' ] ); ?></li>
 			</div>
+			
 			<div id="navbarCollapse" class="collapse navbar-collapse">
-				<ul class="nav navbar-nav navbar-left">
-					<li>
-					<?=
-					$this->Html->link( 'Dashboard', [
-							'controller'	=> 'users',
-							'action'		=> 'index',
-							'_full'			=> true
-					] );
-					?>
+				<?php
+				if( !empty( $user ) ) {
+				?>
+					<ul class="nav navbar-nav navbar-left">
+						<li>
+						<?=
+						$this->Html->link( 'Dashboard', [
+								'controller'	=> 'users',
+								'action'		=> 'index',
+								'_full'			=> true
+						] );
+						?>
+						</li>
+						<li>
+						<?=
+						$this->Html->link( 'Demosite', [
+								'controller'	=> 'demosite',
+								'action'		=> 'index',
+								'_full'			=> true
+						] );
+						?>
+						</li>
+					</ul>
+					
+					<ul class="nav navbar-nav navbar-right">
+					
+					<li class="dropdown">
+						<a class="dropdown-toggle" id="dropdownSeminars" data-toggle="dropdown" aria-expanded="true">Seminarverwaltung <span class="caret"></span></a>
+						<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownSeminars">
+							<?php
+							echo '<li>' . $this->Html->link( 'Seminar anlegen', [ 'controller' => 'seminars', 'action' => 'add' ] ) . '</li>' .
+								'<li class="divider"></li>' .
+								'<li>' . $this->Html->link( 'Seminare verwalten', [ 'controller' => 'seminars', 'action' => 'index' ] ) . '</li>';
+							?>
+						</ul>
 					</li>
-					<li>
-					<?=
-					$this->Html->link( 'Demosite', [
-							'controller'	=> 'demosite',
-							'action'		=> 'index',
-							'_full'			=> true
-					] );
-					?>
+					
+					<li class="dropdown">
+						<a class="dropdown-toggle" id="dropdownUsers" data-toggle="dropdown" aria-expanded="true">Benutzerverwaltung <span class="caret"></span></a>
+						<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownUsers">
+							<?php
+							echo '<li>' . $this->Html->link( 'Benutzer_in anlegen', [ 'controller' => 'users', 'action' => 'add' ] ) . '</li>' .
+								'<li>' . $this->Html->link( 'Benutzer_innen aus CSV Liste anlegen', [ 'controller' => 'users', 'action' => 'addbycsv' ] ) . '</li>' .
+								'<li class="divider"></li>' .
+								'<li>' . $this->Html->link( 'Benutzer_in bearbeiten', [ 'controller' => 'users', 'action' => 'edit/Testify' ] ) . '</li>'; // .
+								//'<li class="divider"></li>' .
+								//'<li>' . $this->Html->link( 'Benutzer_ingruppen verwalten', [ 'controller' => 'usergroups', 'action' => 'index' ] ) . '</li>' .
+								//'<li>' . $this->Html->link( 'Benutzer_ingruppen anlegen', [ 'controller' => 'usergroups', 'action' => 'add' ] ) . '</li>';
+							?>
+						</ul>
 					</li>
-				</ul>
-				<ul class="nav navbar-nav navbar-right">
 					<?php
 					// experimente
+					/*
 					if( isset( $user->groups ) ) {
 						$gs			= explode( ';', $user->groups );
+						
+						echo '<li class="dropdown">' .
+							'<a class="dropdown-toggle" id="dropdownNews" data-toggle="dropdown" aria-expanded="true">Benutzer_innen <span class="caret"></span></a>' .
+							'<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownUsers">';
 					
 						foreach( $gs as $g ) {
 							if( $g == 'sysop' ) {
-								echo '<li>' .
-									$this->Html->link( 'CSV hochladen', [ 'controller' => 'users', 'action' => 'createbycsv' ] ) .
-									'</li>';
+								echo '<li>' . $this->Html->link( 'Benutzer_in anlegen', [ 'controller' => 'users', 'action' => 'create' ] ) . '</li>';
+								echo '<li>' . $this->Html->link( 'CSV hochladen', [ 'controller' => 'users', 'action' => 'createbycsv' ] ) . '</li>';
 							}
 						}
-					}
+						
+						echo '</ul>' .
+							'</li>';
+					}*/
 					?>
 					<!--li class="dropdown">
 						<a class="dropdown-toggle" id="dropdownNews" data-toggle="dropdown" aria-expanded="true"><span class="glyphicon glyphicon-header"></span> Neuigkeiten <span class="caret"></span></a>
@@ -191,6 +229,10 @@
 						</ul>
 					</li-->
 				</ul>
+				
+				<?php
+				}
+				?>
 			</div>
 		</div>
 	</nav>

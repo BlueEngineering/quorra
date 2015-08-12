@@ -13,9 +13,13 @@ namespace App\Controller;
 use App\Controller\AppController;
 use Cake\Event\Event;
 use Cake\Core\Configure;
-use Cake\Network\Session;
+//use Cake\Network\Session;
 use Cake\ORM\TableRegistry;
+use Cake\Network\Email\Email;
+use Cake\Filesystem\Folder;
+use Cake\Filesystem\File;
 use App\Component\MediawikiAPIComponent;
+use App\Component\PasswordGeneratorComponent;
 
 
 class UsersController extends AppController {
@@ -28,61 +32,399 @@ class UsersController extends AppController {
 		
 		// load mediawiki api component
 		$this->loadComponent( 'MediawikiAPI' );
+		$this->loadComponent( 'PasswordGenerator' );
 	}
 	
 	/************************************************************************************
-	 *
+	 * called actions before controller functions executes.
 	 *
 	 ************************************************************************************/
 	public function beforeFilter( Event $event ) {
+		// receive user informations and ACL control
+		if( null !== $this->Auth->user() ) {
+			// receive userinformation from mediawiki
+			$userInfos		= $this->MediawikiAPI->mw_getMyUserinfos()->query->userinfo;
+			
+			// create temporary array for usergroups
+			$groups			= array();
+			
+			// remove allusers (= *-symbol) from usergrouplist and sort to reindex the array
+			unset( $userInfos->groups[ array_search( '*', $userInfos->groups ) ] );
+			unset( $userInfos->groups[ array_search( 'autoconfirmed', $userInfos->groups ) ] );
+			sort( $userInfos->groups );
+			
+			// set missing user values in auth session
+			$this->request->session()->write( 'Auth.User.realname', $userInfos->realname );
+			$this->request->session()->write( 'Auth.User.email', $userInfos->email );
+			
+			// load usergroup entites
+			foreach( $userInfos->groups as $group ) {
+				// search current mw usergroup in database and add to usergroup array
+				array_push( $groups, $this->Users->Groups->get( $group ) );
+			}
+			
+			// set usergroups for ACL
+			$this->request->session()->write( 'Auth.User.groups', $groups );
+		
+			// control variable 	
+			$isAllow	= false;
+			
+			for( $i = 0; $i < count( $this->Auth->user()["groups"] ); $i++ ) {
+				if( $this->Auth->user()["groups"][$i]["users"] == 1 ) {
+					$isAllow	= true;
+					break;
+				}
+			}
+			
+			switch( $this->request->action ) {
+				case 'index':
+					break;
+				case 'add':
+					if( $isAllow != true ) {
+						return $this->redirect( [ 'controller' => 'users', 'action' => 'index' ] );
+					}
+					break;
+				case 'addbycsv':
+					if( $isAllow != true ) {
+						return $this->redirect( [ 'controller' => 'users', 'action' => 'index' ] );
+					}
+					break;
+				case 'create':
+					if( $isAllow != true ) {
+						return $this->redirect( [ 'controller' => 'users', 'action' => 'index' ] );
+					}
+					break;
+				case 'edit':
+					if( $isAllow != true ) {
+						return $this->redirect( [ 'controller' => 'users', 'action' => 'index' ] );
+					}
+					break;
+				case 'listusers':
+					if( $isAllow != true ) {
+						return $this->redirect( [ 'controller' => 'users', 'action' => 'index' ] );
+					}
+					break;
+			}
+		}
 	}
 	
-	
 	/************************************************************************************
-	 * list existing mediawiki users
+	 * dashboard of current user.
 	 *
 	 ************************************************************************************/
 	public function index() {
 		// init variables
-		$user		= $this->Users->get( $this->Auth->user( 'id' ) );
-		$groups		= '';
+		$user		= $this->Auth->user();
 		
-		// call wiki api to receive newest user informations
-		$mwUserinfo	= $this->MediawikiAPI->mw_getUserinfos();
+		//echo $user->groups[0]->name;
 		
-		//
-		if( $mwUserinfo->query->userinfo->id > 0 ) {
-			foreach( $mwUserinfo->query->userinfo->groups as $group ) {
-				$groups		.= $group . ';';
-			}
-		}
-		
-		// copy received mediawiki userinformations in quorra user object
-		$user->username		= $mwUserinfo->query->userinfo->name;
-		$user->realname		= $mwUserinfo->query->userinfo->realname;
-		$user->email		= $mwUserinfo->query->userinfo->email;
-		$user->groups		= $groups;
-		
-		// save (=update) quorra user object to database
-		$this->Users->save( $user );
-		$this->Auth->setUser( array(
-				'id'		=> $this->Auth->user( 'id' ),
-				'username'	=> $user->username,
-				'realname'	=> $user->realname,
-				'email'		=> $user->email,
-				'groups'	=> $user->groups
-			)
-		);
-		
+		// set view variables
 		$this->set( 'user', $user );
-		$this->set( 'currMwUserinfos', $mwUserinfo );
+	}
+	
+	/************************************************************************************
+	 * list all users
+	 *
+	 ************************************************************************************/
+	public function listusers() {
+		//
+		$this->set( 'userData', '' );
 	}
 	
 	/************************************************************************************
 	 *
 	 *
 	 ************************************************************************************/
-	public function createbycsv() {
+	public function edit( $username ) {
+		
+		// receive userinformations from mw
+		$userData		= $this->MediawikiAPI->mw_getUserinfos( $username )->query->users[0];
+		$groups			= array();
+		
+		// delete alluser (*-symbole) and autoconfirmed usergroups
+		unset( $userData->groups[ array_search( '*', $userData->groups ) ] );
+		unset( $userData->groups[ array_search( 'autoconfirmed', $userData->groups ) ] );
+		unset( $userData->groups[ array_search( 'user', $userData->groups ) ] );
+		
+		// receive usergrouplist
+		$ugroups		= $this->Users->Groups->find( 'all' )->all()->toArray();		
+				
+		for( $i = 0; $i < count( $ugroups ); $i++ ) {
+			// remove group user from array
+			if( $ugroups[$i]["name"] != 'user' ) {
+				if( in_array( $ugroups[$i]["name"], $userData->groups ) ) {
+					array_push( $groups, array( 'label' => $ugroups[$i]["label"], 'name' => $ugroups[$i]["name"], 'checked' => true ) );
+				} else {
+					array_push( $groups, array( 'label' => $ugroups[$i]["label"], 'name' => $ugroups[$i]["name"], 'checked' => false ) );
+				}
+			}
+		}
+		
+		// delete last , in groups string
+		$user				= array( 'name'	=> $userData->name, 'groups' => $groups );
+		
+		// is request sending?
+		if( $this->request->is( 'post' ) ) {
+			// temporary group control variables
+			$addGroups		= '';
+			$removeGroups	= '';
+			
+			
+			echo '<pre>';
+			print_r( $this->request->data );
+			echo '</pre>';
+			
+			// search adding and removing groups
+			foreach( $this->request->data["group"] as $grpname => $grpvalue ) {
+				//
+				if( $grpvalue == true  ) {
+					$addGroups		.= $grpname . '|';
+				} else {
+					$removeGroups	.= $grpname . '|';
+				}
+			}
+			
+			// delete last symbol from strings
+			$addGroups			= substr( $addGroups, 0, -1 );
+			$removeGroups		= substr( $removeGroups, 0, -1 );
+			
+			// call mediawiki api
+			$this->MediawikiAPI->mw_editUserrights( $this->request->data["username"], $addGroups, $removeGroups, $this->request->data["urtoken"] );
+			
+			// reload page with redirect
+			$this->redirect( [ 'controller' => 'users', 'action' => 'edit/' . $username ] );
+		}
+		
+		// call userrighttoken
+		$user["urtoken"]	= $urtoken	= $this->MediawikiAPI->mw_getUserrightToken()->query->tokens->userrightstoken;
+		
+		$this->set( 'userData', $user );
+	}	
+	
+	/************************************************************************************
+	 * 
+	 *
+	 ************************************************************************************/
+	protected function create( $username, $email = '', $realname = '', $groups = '', $token ) {
+		// generate a random password
+		$password	= $this->PasswordGenerator->generate_password( 16 );
+		
+		// call mediawiki API function to create an useraccount
+		$mwAnswer	= $this->MediawikiAPI->mw_createUseraccount( $username, $password, $email, $realname );
+		
+		// creating not successful?
+		if( !empty( $mwAnswer->error ) || $mwAnswer->createaccount->result != 'Success' ) {
+			return $mwAnswer->error->info;
+		}
+		
+		// is email given?
+		if( !empty( $email ) ) {
+			// load quorra configurations
+			$mw_conf		= Configure::read('quorra');
+			
+			if ( empty( $realname ) ) {
+				$name	= $username;
+			} else {
+				$name	= $realname;
+			}
+			
+			$subject	= "[Blue Engineering] Willkommen im Seminarbereich des mediaWikis von Blue Engineering";
+			$text		= "Hallo " . $name . ",\n" .
+						"\n" .
+						"für dich wurde ein mediaWiki Benutzer_inkonto angelegt. Dieses wird benötigt um auf die Informationsseiten\n" .
+						"des Blue Engineering Seminars an der Technischen Universität Berlin zugreifen zu können.\n" .
+						"\n" .
+						"Deine Benutzer_inkontodaten sind:\n" .
+						"Dein Benutzer_inkontoname: " . $username . " (beachte bitte die Groß- und Kleinschreibung!)\n" .
+						"Dein Password: " . $password . "\n" .
+						"\n" .
+						"Das BE mediaWiki erreichst du über " . $mw_conf['mediawiki']['scheme'] . "://" . $mw_conf['mediawiki']['url'] . "\n" .
+						"Um dein Passwort zu ändern musst du dich erfolgreich einloggen. Anschließend kannst du dieses in den Einstellungen unter " .
+						$mw_conf['mediawiki']['scheme'] . "://" . $mw_conf['mediawiki']['url'] . "/index.php/Spezial:Einstellungen erreichen.\n" .
+						"\n" .
+						"Viele Grüße\n" .
+						"Dein Blue Engineering Seminarteam";
+			
+			// sending email
+			/*
+			$sendEMail	= new Email( 'default' );
+			$sendEMail->from( [ 'seminar@blue-engineering.org' => 'Blue Engineering Seminarteam' ] )->to( $email )->subject( $subject )->send( $text );
+			*/
+		}
+		
+		// groups given?
+		if( !empty( $groups ) ) {
+			$this->MediawikiAPI->mw_editUserrights( $username, $groups, '', $token );
+		}
+		
+		return $mwAnswer->createaccount->result;
+	}
+	
+	
+	/************************************************************************************
+	 * called and filled a mask to create a new user and submit mask datas to
+	 * create() where call mediawiki API function to create a new user.
+	 *
+	 ************************************************************************************/
+	public function add() {
+		// init view variables
+		// ---
+		
+		// receive userright token
+		$urtoken	= $this->MediawikiAPI->mw_getUserrightToken()->query->tokens->userrightstoken;
+		$this->set( 'urtoken', $urtoken );
+		
+		// receive usergrouplist
+		$ugroups		= $this->Users->Groups->find( 'all' )->all()->toArray();
+		$this->set( 'ugroups', $ugroups );
+		
+		if( $this->request->is( 'post' ) ) {
+			// required fields empty?
+			if( empty( $this->request->data["username"] ) || empty( $this->request->data["email"] ) ) {
+				$this->set( 'notice', 'Es wurden nicht alle Pflichtfelder ausgefüllt. Pflichtfelder sind all jene Felder die kein (optional) Vermerk tragen.' );
+				$this->set( 'cssInfobox', 'danger' );
+				return;
+			}
+			
+			// usergroups
+			$addGroups		= '';
+						
+			foreach( $this->request->data["group"] as $grpname => $grpvalue ) {
+				if( $grpvalue == true ) {
+					$addGroups	.= $grpname . '|'; 
+				}
+			}
+			
+			$addGroups		= substr( $addGroups, 0, -1 );
+			
+			// create new mediawiki user
+			$result		= $this->create( $this->request->data["username"], $this->request->data["email"], $this->request->data["realname"], $addGroups, $this->request->data["urtoken"] );
+			
+			if( $result != 'Success' ) {
+				$this->set( 'notice', 'Beim Anlegen des Benutzer_inaccounts ist ein Fehler aufgetreten.</p><p>' . $result );
+				$this->set( 'cssInfobox', 'danger' );
+				return;
+			}
+			
+			$this->set( 'notice', 'Der / Die Benutzer_in wurde erfolgreich angelegt. Er / Sie wurde via E-Mail informiert.' );
+			$this->set( 'cssInfobox', 'success' );
+			return;
+		}
+		
+		// set view variables
+		$this->set( 'notice', '' );
+		$this->set( 'cssInfobox', '' );
+	}
+	
+	
+	/************************************************************************************
+	 * filled and called a mask where can upload a csv file with members. function
+	 * build a username and call creating function to submit users in mediawiki.
+	 *
+	 ************************************************************************************/
+	public function addbycsv() {
+		// init view variables
+		$notice			= array();
+		$error			= '';
+		
+		// receive userright token
+		$urtoken	= $this->MediawikiAPI->mw_getUserrightToken()->query->tokens->userrightstoken;
+		$this->set( 'urtoken', $urtoken );
+		
+		// given data from form?
+		if( $this->request->is( 'post' ) ) {
+			// sending file error?
+			switch( $this->request->data["csvfile"]["error"] ) {
+				case 1:
+					$this->set( 'error', 'Die Größe der übermittelte Datei ist größer als vom Server gestattet.' );
+					return;
+				case 2:
+					$this->set( 'error', 'Die Größe der übermittelten Datei überschreitet die in der HTML-Spezifikation festgelegte Größe.' );
+					return;
+				case 3:
+					$this->set( 'error', 'Die Datei konnte nur teilweise übermittelt werden. Bitte versuchen Sie es erneut.' );
+					return;
+				case 4:
+					$this->set( 'error', 'Es wurde keine Datei hochgeladen.' );
+					return;
+				case 5:
+					$this->set( 'error', '' );
+					return;
+				case 6:
+					$this->set( 'error', 'Es ist kein temporäres Verzeichnis zum Zwischenspeichern konfiguriert. Bitte informieren Sie Ihre_n Admin_a.' );
+					return;
+				case 7:
+					$this->set( 'error', 'Die Datei konnte nicht gespeichert werden. Bitte informieren Sie Ihre_n Admin_a.' );
+					return;
+				case 8:
+					$this->set( 'error', 'Eine PHP-Erweiterung hat den Uploadvorgang unterbrochen. Bitte informieren Sie Ihre_n Admin_a.' );
+					return;
+			}
+			
+			// is csv file?
+			$filetype	= explode( '.', $this->request->data["csvfile"]["name"] );
+			
+			if( $filetype[ count($filetype)-1 ] != 'csv' ) {
+				$this->set( 'error', 'Die Dateiendnung muss .csv sein. Bitte überprüfen Sie die ausgewählte Datei und versuchen Sie es erneut.' );
+				return;
+			}
+			
+			// init file handling
+			$file		= new File( $this->request->data["csvfile"]["tmp_name"] );
+			$file->open();
+			$fdata		= $file->read();
+			$csvData	= array();
+						
+			// parse csv file
+			foreach( str_getcsv( $fdata, "\n" ) as $csvrow ) {
+				$csvrow	= str_getcsv( $csvrow, ',' );
+				array_push( $csvData, $csvrow );
+			}
+			
+			// create username and build 
+			for( $i = 1; $i < count( $csvData ); $i++ ) {
+				// username pattern: <forename>.<first 2 chars of surname>.<semester>
+				$username	= $csvData[$i][0] . '.' . substr( $csvData[$i][1], 0, 3 );
+				
+				if( !empty( $this->request->data["semname"] ) ) {
+					$username	.= '.' . $this->request->data["semname"];
+				}
+				
+				// create usergroup string
+				$groups		= '';
+				$urgroups	= explode( ',', $this->request->data["groups"] );
+				
+				foreach( $urgroups as $group ) {
+					$groups	.= $group . '|';
+				}
+				
+				$groups		= substr( $groups, 0, -1 );
+				
+				// create account
+				$result		= $this->create( $username, $csvData[$i][2], $csvData[$i][0] . ' ' . $csvData[$i][1], $groups, $this->request->data["urtoken"] );
+				
+				if( $result != 'Success' ) {
+					$cssResult	= 'danger';
+				} else {
+					$cssResult	= 'success';
+				}
+				
+				array_push( $notice, array( 'name' => $csvData[$i][0] . ' ' . $csvData[$i][1], 'cssResult' => $cssResult, 'result' => $result ) );
+			}
+			
+			
+			// close and delete file
+			$file->close();
+			$file->delete();
+			
+			$this->set( 'notice', $notice );
+			$this->set( 'error', $error );
+			return;
+		}
+		
+		// set view variables
+		$this->set( 'notice', $notice );
+		$this->set( 'error', $error );
 	}
 	
 	
@@ -103,33 +445,15 @@ class UsersController extends AppController {
 			$mwLogin		= $this->MediawikiAPI->mw_login( $this->request->data["username"], $this->request->data['password'] );
 			
 			// mediawiki login successful?
-			if( $mwLogin->login->result == 'Success' ) {				
-				// is wiki user in quorra database
-				$query		= $this->Users->findById( $mwLogin->login->lguserid );
-				
-				if( $query->count() == 0 ) {
-					// create new entity
-					$user			= $this->Users->newEntity();
-					
-					// set entity data
-					$user->id		= $mwLogin->login->lguserid;
-					$user->username	= $mwLogin->login->lgusername;
-					$user->realname	= '';
-					$user->email	= '';
-					$user->groups	= '';
-					
-					// save entity
-					$this->Users->save( $user );
-					
-					// build array for auth componente
-					$user			= array( 'id' => $mwLogin->login->lguserid, 'username' => $mwLogin->login->lgusername, 'realname' => '', 'email' => '', 'groups' => '' );
-				} else {
-					// receive data from database
-					$user			= $query->first();
-					
-					// build array for auth componente
-					$user			= array( 'id' => $user->id, 'username' => $user->lgusername, 'realname' => $user->realname, 'email' => $user->email, 'groups' => $user->groups );
-				}
+			if( $mwLogin->login->result == 'Success' ) {
+				// create and set array for auth->user()
+				$user	= array(
+					'id'			=> $mwLogin->login->lguserid,
+					'username'	=> $mwLogin->login->lgusername,
+					'realname'	=> '',
+					'email'		=> '',
+					'groups'		=> array()
+				);
 				
 				// login user to cakephp app
 				$user		= $this->Auth->setUser( $user );
@@ -154,6 +478,12 @@ class UsersController extends AppController {
 		// send logout to mediawiki
 		$this->MediawikiAPI->mw_logout();
 		
+		//
+		//unset( $_COOKIE[$mw_conf['mediawiki']['cookieprefix'] . "_session"] );
+		/*unset( $mw_conf['mediawiki']['cookieprefix'] . "UserID" );
+		unset( $mw_conf['mediawiki']['cookieprefix'] . "UserName" );
+		unset( $mw_conf['mediawiki']['cookieprefix'] . "Token" );
+		*/
 		// call Auth to logout on cakephp
 		return $this->redirect( $this->Auth->logout() );
 	}

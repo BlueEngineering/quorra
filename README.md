@@ -24,6 +24,31 @@ Quorra need some mediaWiki extensions to work:
 
 # Changelogs
 
+## Version 1.0 Build 5
+**new features:**
+* Users MVC
+  * adding methods add(), addbycsv() and create() to create users
+  * adding method edit() to edit userinformations
+  * adding hasMany relation to Groups MVC
+* adding Groups MVC, an ACL table
+  * some ACL little checks
+* adding Seminar MVC
+	* adding seminar model with table informations
+	* adding method index() to list existing seminars
+	* adding method add() to create a seminar
+* MediawikiAPIComponent:
+  * Add mw_getUserinfos() to receive userinformations of specific user (old mw_getUserinfos() method are renamed)
+  * Add mw_createUseraccount() to create useraccounts in mediawiki system
+  * Add mw_getUserrightToken() to receive an userright token. This is needed for editing userrights in mediawiki system
+  * Add mw_editUserrights() to edit userrights of a specific user
+
+**changes / bugfixing:*
+* Demosite MVC
+  * Fixing overwrite mediawiki session if user are logged.
+* MediawikiAPIComponent:
+  * Fixing incorrect cookie settings in mw_createArticle(), mw_editArticle() and mw_getEditToken()
+  * Renamed mw_getUserinfos() to mw_getMyUserinfos()
+
 ## Version 1.0 Build 4
 **new features:**
 * adding Users MVC with authentification 

@@ -39,10 +39,15 @@ class DemositeController extends AppController {
 		// read mediawiki settings from config file
 		$mw_conf		= Configure::read('quorra');
 		$demositeTitle	= "Demo:Demosite";
-				
+		
 		// login with user
-		$this->MediawikiAPI->mw_login( $mw_conf['mediawiki']['demouser'], $mw_conf['mediawiki']['demopass'] );
-				
+		/*
+		if( !$this->Auth->user( 'id' ) ) {
+			$this->MediawikiAPI->mw_login( $mw_conf['mediawiki']['demouser'], $mw_conf['mediawiki']['demopass'] );
+			//$this->redirect( [ 'controller' => 'demosite', 'action' => 'index' ] );
+		}
+		*/
+		
 		// get demosite id
 		$demositeId					= key( $this->MediawikiAPI->mw_getArticleByTitle( $demositeTitle )->query->pages );
 						
@@ -90,20 +95,23 @@ class DemositeController extends AppController {
 				
 				// create a new page or edit an existing page?
 				if ( $this->request->data['mw_articleId'] > 0 ) {
-					$token		= $this->MediawikiAPI->mw_getEditToken()->query->tokens->csrftoken;
-					$result		= $this->MediawikiAPI->mw_editArticle( $this->request->data['mw_articleId'],
-																	   $this->request->data['mw_articleTitle'], 
-																	   $this->MediawikiAPI->mw_parsingHtmlToWikisyntax( $this->request->data['mw_articleContent'] ), 
-																	   'cakePHP quorra testing', 
-																	   $token, 
-																	   $this->request->data['mw_curTimestamp'] );
+					$result		= $this->MediawikiAPI->mw_editArticle(
+						$this->request->data['mw_articleId'],
+						$this->request->data['mw_articleTitle'], 
+						$this->MediawikiAPI->mw_parsingHtmlToWikisyntax( $this->request->data['mw_articleContent'] ), 
+						'cakePHP quorra demo', 
+						$this->request->data['mw_editToken'], 
+						$this->request->data['mw_curTimestamp']
+					);
 				} else {
 					$token		= $this->MediawikiAPI->mw_getEditToken()->query->tokens->csrftoken;
-					$result		= $this->MediawikiAPI->mw_createArticle(	$this->request->data['mw_articleTitle'], 
-																			$this->MediawikiAPI->mw_parsingHtmlToWikisyntax( $this->request->data['mw_articleContent'] ), 
-																			'cakePHP quorra testing', 
-																			$token );
-																			// $this->request->data['mw_curTimestamp'] );
+					$result		= $this->MediawikiAPI->mw_createArticle(
+						$this->request->data['mw_articleTitle'], 
+						$this->MediawikiAPI->mw_parsingHtmlToWikisyntax( $this->request->data['mw_articleContent'] ), 
+						'cakePHP quorra demo', 
+						$this->request->data['mw_editToken']
+						// $this->request->data['mw_curTimestamp']
+					);
 				}
 				
 				// error message receive?

@@ -19,7 +19,11 @@ class GroupsTable extends Table {
 	 */
 	public function validationDefault( Validator $validator ) {
 		return $validator
-			->notEmpty( 'name', 'Der Benutzergruppenname muss angegeben werden.' );
+			->notEmpty( 'name', 'Der Benutzergruppenname muss angegeben werden.' )
+			->allowEmpty( 'courses' )
+			->allowEmpty( 'users' );
+			//->add( 'courses' )
+			//->add( 'users' )
 	}
 	
 }

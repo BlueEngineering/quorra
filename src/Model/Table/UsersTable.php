@@ -31,7 +31,10 @@ class UsersTable extends Table {
 	 */
 	public function initialize( array $config ) {
 		// define hasMany relationsship between user and (user-)groups
-		//$this->hasMany( 'Groups' );
+		$this->hasMany( 'Groups', [
+			'foreignKey'	=> 'name',
+			'bindingKey'	=> 'groups'
+		] );
 	}
 }
 ?>

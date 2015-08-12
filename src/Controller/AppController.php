@@ -37,11 +37,11 @@ class AppController extends Controller
      * @return void
      */
     public function initialize() {
-		// load parent initialize objects
-        parent::initialize();
+    	// load parent initialize objects
+      parent::initialize();
 		
 		// load components for global use
-        $this->loadComponent( 'Flash' );
+        //$this->loadComponent( 'Flash' );
 		$this->loadComponent( 'Auth', [
 			'loginRedirect'		=> [
 				'controller'		=> 'users',
@@ -55,6 +55,7 @@ class AppController extends Controller
 		
 		// set global variables
 		$confApp	= Configure::read('debug');
+		
 		$this->set( 'confApp', $confApp );
 		$this->set( 'user', $this->Auth->user() );
     }
