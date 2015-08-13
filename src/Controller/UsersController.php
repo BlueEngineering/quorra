@@ -15,11 +15,11 @@ use Cake\Event\Event;
 use Cake\Core\Configure;
 //use Cake\Network\Session;
 use Cake\ORM\TableRegistry;
-use Cake\Network\Email\Email;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 use App\Component\MediawikiAPIComponent;
 use App\Component\PasswordGeneratorComponent;
+use App\Component\EmailSendingComponent;
 
 
 class UsersController extends AppController {
@@ -33,6 +33,7 @@ class UsersController extends AppController {
 		// load mediawiki api component
 		$this->loadComponent( 'MediawikiAPI' );
 		$this->loadComponent( 'PasswordGenerator' );
+		$this->loadComponent( 'EmailSending' );
 	}
 	
 	/************************************************************************************
@@ -202,13 +203,17 @@ class UsersController extends AppController {
 	}	
 	
 	/************************************************************************************
-	 * 
+	 * create an user and send email if mailaddress set.
 	 *
 	 ************************************************************************************/
-	protected function create( $username, $email = '', $realname = '', $groups = '', $token ) {
+	protected function create( $username, $email, $realname, $groups, $seminar = '', $token, $mailsender, $mailsubject, $mailtext ) {
 		// generate a random password
 		$password	= $this->PasswordGenerator->generate_password( 16 );
 		
+		
+		// load quorra configurations
+		$mw_conf		= Configure::read('quorra');
+				
 		// call mediawiki API function to create an useraccount
 		$mwAnswer	= $this->MediawikiAPI->mw_createUseraccount( $username, $password, $email, $realname );
 		
@@ -219,37 +224,30 @@ class UsersController extends AppController {
 		
 		// is email given?
 		if( !empty( $email ) ) {
-			// load quorra configurations
-			$mw_conf		= Configure::read('quorra');
-			
+			// check if name set
 			if ( empty( $realname ) ) {
 				$name	= $username;
 			} else {
 				$name	= $realname;
 			}
 			
-			$subject	= "[Blue Engineering] Willkommen im Seminarbereich des mediaWikis von Blue Engineering";
-			$text		= "Hallo " . $name . ",\n" .
-						"\n" .
-						"für dich wurde ein mediaWiki Benutzer_inkonto angelegt. Dieses wird benötigt um auf die Informationsseiten\n" .
-						"des Blue Engineering Seminars an der Technischen Universität Berlin zugreifen zu können.\n" .
-						"\n" .
-						"Deine Benutzer_inkontodaten sind:\n" .
-						"Dein Benutzer_inkontoname: " . $username . " (beachte bitte die Groß- und Kleinschreibung!)\n" .
-						"Dein Password: " . $password . "\n" .
-						"\n" .
-						"Das BE mediaWiki erreichst du über " . $mw_conf['mediawiki']['scheme'] . "://" . $mw_conf['mediawiki']['url'] . "\n" .
-						"Um dein Passwort zu ändern musst du dich erfolgreich einloggen. Anschließend kannst du dieses in den Einstellungen unter " .
-						$mw_conf['mediawiki']['scheme'] . "://" . $mw_conf['mediawiki']['url'] . "/index.php/Spezial:Einstellungen erreichen.\n" .
-						"\n" .
-						"Viele Grüße\n" .
-						"Dein Blue Engineering Seminarteam";
-			
-			// sending email
-			/*
-			$sendEMail	= new Email( 'default' );
-			$sendEMail->from( [ 'seminar@blue-engineering.org' => 'Blue Engineering Seminarteam' ] )->to( $email )->subject( $subject )->send( $text );
-			*/
+			// call sending Mail function
+			$this->EmailSending->send_email(
+				$mailsender,
+				'Blue Engineering - Quorra mediaWiki management system',
+				$email,
+				$mailsubject,
+				$this->EmailSending->parsing_mailtext(
+					$mailtext,
+					array(
+						$name,
+						$username,
+						$password,
+						$mw_conf['mediawiki']['scheme'] . "://" . $mw_conf['mediawiki']['url'] . "/index.php/" . $seminar,
+						$mw_conf['mediawiki']['scheme'] . "://" . $mw_conf['mediawiki']['url']
+					)
+				)
+			);
 		}
 		
 		// groups given?
@@ -291,14 +289,25 @@ class UsersController extends AppController {
 						
 			foreach( $this->request->data["group"] as $grpname => $grpvalue ) {
 				if( $grpvalue == true ) {
-					$addGroups	.= $grpname . '|'; 
+					$addGroups	.= $grpname . '|';
 				}
 			}
 			
 			$addGroups		= substr( $addGroups, 0, -1 );
 			
-			// create new mediawiki user
-			$result		= $this->create( $this->request->data["username"], $this->request->data["email"], $this->request->data["realname"], $addGroups, $this->request->data["urtoken"] );
+			// create new mediawiki user			
+			$result		= $this->create(
+				$this->request->data["username"],
+				$this->request->data["email"],
+				$this->request->data["realname"],
+				$addGroups,
+				'',
+				$this->request->data["urtoken"],
+				$this->request->data["mailsender"],
+				$this->request->data["mailsubject"],
+				$this->request->data["mailtext"]
+			);
+			
 			
 			if( $result != 'Success' ) {
 				$this->set( 'notice', 'Beim Anlegen des Benutzer_inaccounts ist ein Fehler aufgetreten.</p><p>' . $result );
@@ -322,7 +331,7 @@ class UsersController extends AppController {
 	 * build a username and call creating function to submit users in mediawiki.
 	 *
 	 ************************************************************************************/
-	public function addbycsv() {
+	public function addbycsv( $semid ) {
 		// init view variables
 		$notice			= array();
 		$error			= '';
@@ -381,8 +390,11 @@ class UsersController extends AppController {
 				array_push( $csvData, $csvrow );
 			}
 			
+			// get seminar informations
+			$seminar	= $this->Users->Seminars->find( 'all' )->where( [ 'Seminars.id =' => $semid ] )->toArray();
+			
 			// create username and build 
-			for( $i = 1; $i < count( $csvData ); $i++ ) {
+			for( $i = 0; $i < count( $csvData ); $i++ ) {
 				// username pattern: <forename>.<first 2 chars of surname>.<semester>
 				$username	= $csvData[$i][0] . '.' . substr( $csvData[$i][1], 0, 3 );
 				
@@ -392,7 +404,7 @@ class UsersController extends AppController {
 				
 				// create usergroup string
 				$groups		= '';
-				$urgroups	= explode( ',', $this->request->data["groups"] );
+				$urgroups	= explode( ',', $seminar[0]["memgrp"] );
 				
 				foreach( $urgroups as $group ) {
 					$groups	.= $group . '|';
@@ -401,7 +413,17 @@ class UsersController extends AppController {
 				$groups		= substr( $groups, 0, -1 );
 				
 				// create account
-				$result		= $this->create( $username, $csvData[$i][2], $csvData[$i][0] . ' ' . $csvData[$i][1], $groups, $this->request->data["urtoken"] );
+				$result		= $this->create(
+					$username,
+					$csvData[$i][2],
+					$csvData[$i][0] . ' ' . $csvData[$i][1],
+					$groups,
+					$seminar[0]["namespace"] . ":Start",
+					$this->request->data["urtoken"],
+					$seminar[0]["mailsender"],
+					$seminar[0]["mailsubject"],
+					$seminar[0]["mailtext"]
+				);
 				
 				if( $result != 'Success' ) {
 					$cssResult	= 'danger';
@@ -411,7 +433,6 @@ class UsersController extends AppController {
 				
 				array_push( $notice, array( 'name' => $csvData[$i][0] . ' ' . $csvData[$i][1], 'cssResult' => $cssResult, 'result' => $result ) );
 			}
-			
 			
 			// close and delete file
 			$file->close();

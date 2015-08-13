@@ -3,10 +3,10 @@
 </div>
 <div>
 <p>
-Der innere Aufbau der CSV-Daten muss folgendem Muster entsprechen:
+Der innere Aufbau der CSV-Daten muss dem Muster <em>Vorname,Nachname,E-Mail</em> entsprechen.
 </p>
 <p>
-<em>Vorname,Nachname,E-Mail</em><br />
+<strong>Beispiel für zwei Nutzer_innen:</strong><br />
 <em>Maria,Musterfrau,mariamusterfrau@mustermail.de</em><br />
 <em>Max,Mustermann,max.mustermann@mustermail.de</em>
 </p>
@@ -16,7 +16,7 @@ Der innere Aufbau der CSV-Daten muss folgendem Muster entsprechen:
 // has form a result
 if( !empty( $notice ) || !empty( $error ) ) {
 	// is given results or an error?
-	if( empty( $error ) ) {		
+	if( empty( $error ) ) {
 		echo '<table class="table table-striped">' .
 			'<tr>' .
 				'<th>Name</th>' .
@@ -63,7 +63,7 @@ if( !empty( $notice ) || !empty( $error ) ) {
 			'</div>' .
 		
 		// usergroups (optional)
-		'<div class="form-group">' .
+		'<!--div class="form-group">' .
 			'<div class="col-md-2 col-sm-3" align="right">' .
 				$this->Form->label( 'groups', 'mediaWiki Benutzergruppen (optional):', [ 'id' => 'label-groups', 'class' => 'control-label' ] ) .
 			'</div>' .
@@ -74,7 +74,7 @@ if( !empty( $notice ) || !empty( $error ) ) {
 			'<div class="col-md-10 col-sm-9 help-block">' .
 				'Wichtig! Die Namen werden durch Kommata und ohne Leerzeichen getrennt. Bsp: bot,bureaucrat,...' .
 			'</div>' .
-		'</div>' .
+		'</div-->' .
 		
 			// submit button
 			'<div class="form-group">' .
@@ -89,4 +89,4 @@ if( !empty( $notice ) || !empty( $error ) ) {
 		$this->Form->end() .
 	'</div>';
 }
-	?>
+?>

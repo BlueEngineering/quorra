@@ -43,6 +43,9 @@ class SeminarsController extends AppController {
 		
 		// is data sending by form?
 		if( $this->request->is( 'post' ) ) {
+			// validate given data
+			
+			
 			$this->set( 'notice', 'Speichern Button wurde gedrückt' );
 			$this->set( 'cssInfobox', 'success' );
 		}		

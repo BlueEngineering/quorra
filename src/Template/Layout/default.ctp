@@ -79,9 +79,9 @@
 						<a class="dropdown-toggle" id="dropdownSeminars" data-toggle="dropdown" aria-expanded="true">Seminarverwaltung <span class="caret"></span></a>
 						<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownSeminars">
 							<?php
-							echo '<li>' . $this->Html->link( 'Seminar anlegen', [ 'controller' => 'seminars', 'action' => 'add' ] ) . '</li>' .
+							echo '<li>' . $this->Html->link( 'Seminare anzeigen', [ 'controller' => 'seminars', 'action' => 'index' ] ) . '</li>' .
 								'<li class="divider"></li>' .
-								'<li>' . $this->Html->link( 'Seminare verwalten', [ 'controller' => 'seminars', 'action' => 'index' ] ) . '</li>';
+								'<li>' . $this->Html->link( 'Neues Seminar anlegen', [ 'controller' => 'seminars', 'action' => 'add' ] ) . '</li>';
 							?>
 						</ul>
 					</li>
@@ -91,7 +91,7 @@
 						<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownUsers">
 							<?php
 							echo '<li>' . $this->Html->link( 'Benutzer_in anlegen', [ 'controller' => 'users', 'action' => 'add' ] ) . '</li>' .
-								'<li>' . $this->Html->link( 'Benutzer_innen aus CSV Liste anlegen', [ 'controller' => 'users', 'action' => 'addbycsv' ] ) . '</li>' .
+								'<li>' . $this->Html->link( 'Benutzer_innen aus CSV Liste anlegen', [ 'controller' => 'users', 'action' => 'addbycsv/104' ] ) . '</li>' .
 								'<li class="divider"></li>' .
 								'<li>' . $this->Html->link( 'Benutzer_in bearbeiten', [ 'controller' => 'users', 'action' => 'edit/Testify' ] ) . '</li>'; // .
 								//'<li class="divider"></li>' .
