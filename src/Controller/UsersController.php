@@ -55,8 +55,13 @@ class UsersController extends AppController {
 			sort( $userInfos->groups );
 			
 			// set missing user values in auth session
-			$this->request->session()->write( 'Auth.User.realname', $userInfos->realname );
-			$this->request->session()->write( 'Auth.User.email', $userInfos->email );
+			if( !empty( $userInfos->realname ) ) {
+				$this->request->session()->write( 'Auth.User.realname', $userInfos->realname );
+			}
+			
+			if( !empty( $userInfos->email ) ) {
+				$this->request->session()->write( 'Auth.User.email', $userInfos->email );
+			}
 			
 			// load usergroup entites
 			foreach( $userInfos->groups as $group ) {
