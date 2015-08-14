@@ -5,8 +5,6 @@
 	<pre>
 	<?php
 	print_r( $user );
-	print( $user->groups[0]["name"] );
 	?>
 	</pre>
-	<?= h( $user->id ); ?>
 </div>
