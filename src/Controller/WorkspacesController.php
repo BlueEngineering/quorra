@@ -14,7 +14,15 @@ use App\Component\MediawikiAPIComponent;
 use Cake\Filesystem\Folder;
 use Cake\Filesystem\File;
 
-class SeminarsController extends AppController {
+class WorkspacesController extends AppController {
+	// controller attributes
+	public $paginate	= [
+		'limit'		=> 1,
+		'order'		=> [
+			'Workspaces.name'	=> 'asc'
+		]
+	];
+	
 	/************************************************************************************
 	 * initialize components and class width informations
 	 *
@@ -22,6 +30,7 @@ class SeminarsController extends AppController {
 	public function initialize() {
 		parent::initialize();
 		$this->loadComponent( 'MediawikiAPI' );
+		$this->loadComponent( 'Paginator' );
 	}
 	
 	/************************************************************************************
@@ -30,6 +39,7 @@ class SeminarsController extends AppController {
 	 ************************************************************************************/
 	public function index() {
 		//
+		$this->set( 'workspaces', $this->paginate()->toArray() );
 	}
 	
 	/************************************************************************************

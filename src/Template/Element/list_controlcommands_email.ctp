@@ -22,8 +22,8 @@
 			<td>Das zufällig generierte Passwort zum BEMW Benuter_inaccount. Dieses ist nur der/dem Teilnehmer_in sichtbar.</td>
 		</tr>
 		<tr>
-			<td>%urlSeminar</td>
-			<td>Die Webadresse zum Seminarbereich im BEMW.</td>
+			<td>%urlWorkspace</td>
+			<td>Die Webadresse des Arbeitsbereiches im BEMW.</td>
 		</tr>
 		<tr>
 			<td>%urlWiki</td>

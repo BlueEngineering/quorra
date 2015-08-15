@@ -76,12 +76,12 @@
 					<ul class="nav navbar-nav navbar-right">
 					
 					<li class="dropdown">
-						<a class="dropdown-toggle" id="dropdownSeminars" data-toggle="dropdown" aria-expanded="true">Seminarverwaltung <span class="caret"></span></a>
-						<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownSeminars">
+						<a class="dropdown-toggle" id="dropdownWorkspaces" data-toggle="dropdown" aria-expanded="true">Verwaltung Arbeitsbereiche <span class="caret"></span></a>
+						<ul class="dropdown-menu" role="menu" aria-labelledby="dropdownWorkspaces">
 							<?php
-							echo '<li>' . $this->Html->link( 'Seminare anzeigen', [ 'controller' => 'seminars', 'action' => 'index' ] ) . '</li>' .
+							echo '<li>' . $this->Html->link( 'Arbeitsbereiche anzeigen', [ 'controller' => 'workspaces', 'action' => 'index' ] ) . '</li>' .
 								'<li class="divider"></li>' .
-								'<li>' . $this->Html->link( 'Neues Seminar anlegen', [ 'controller' => 'seminars', 'action' => 'add' ] ) . '</li>';
+								'<li>' . $this->Html->link( 'Neuen Arbeitsbereich anlegen', [ 'controller' => 'workspaces', 'action' => 'add' ] ) . '</li>';
 							?>
 						</ul>
 					</li>

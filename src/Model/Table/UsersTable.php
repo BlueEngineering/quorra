@@ -36,7 +36,7 @@ class UsersTable extends Table {
 			'bindingKey'	=> 'groups'
 			]
 		);
-		$this->hasMany( 'Seminars', [
+		$this->hasMany( 'Workspaces', [
 			'foreignKey'	=> '',
 			'bindingKey'	=> ''
 			]
